@@ -52,7 +52,10 @@ export default function ExpertDetail() {
     );
   }
 
-  const totalValue = expert.current_balance + expert.positions_value;
+  const balance = expert.current_balance || 0;
+  const posValue = expert.positions_value || 0;
+  const pnl = expert.total_pnl || 0;
+  const totalValue = balance + posValue;
   const returnPct = expert.initial_balance > 0
     ? ((totalValue - expert.initial_balance) / expert.initial_balance) * 100
     : 0;
@@ -86,12 +89,12 @@ export default function ExpertDetail() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-          <MiniStat label="Cash" value={`$${expert.current_balance.toFixed(2)}`} />
-          <MiniStat label="In Positions" value={`$${expert.positions_value.toFixed(2)}`} />
+          <MiniStat label="Cash" value={`$${balance.toFixed(2)}`} />
+          <MiniStat label="In Positions" value={`$${posValue.toFixed(2)}`} />
           <MiniStat
             label="P&L"
-            value={`${expert.total_pnl >= 0 ? "+" : ""}$${expert.total_pnl.toFixed(2)}`}
-            color={expert.total_pnl >= 0 ? "text-green-400" : "text-red-400"}
+            value={`${pnl >= 0 ? "+" : ""}$${pnl.toFixed(2)}`}
+            color={pnl >= 0 ? "text-green-400" : "text-red-400"}
           />
           <MiniStat label="Trades" value={String(expert.trade_count || 0)} />
         </div>

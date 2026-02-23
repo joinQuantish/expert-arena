@@ -13,8 +13,9 @@ interface Expert {
 }
 
 export default function ExpertCard({ expert, rank }: { expert: Expert; rank: number }) {
-  const totalValue = expert.current_balance + expert.positions_value;
-  const isPositive = expert.return_pct >= 0;
+  const totalValue = (expert.current_balance || 0) + (expert.positions_value || 0);
+  const returnPct = expert.return_pct || 0;
+  const isPositive = returnPct >= 0;
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 hover:border-gray-600 transition cursor-pointer group">
@@ -39,7 +40,7 @@ export default function ExpertCard({ expert, rank }: { expert: Expert; rank: num
         <div>
           <div className="text-lg font-bold text-white">${totalValue.toFixed(2)}</div>
           <div className={`text-sm font-semibold ${isPositive ? "text-green-400" : "text-red-400"}`}>
-            {isPositive ? "+" : ""}{expert.return_pct.toFixed(1)}%
+            {isPositive ? "+" : ""}{returnPct.toFixed(1)}%
           </div>
         </div>
         <div className="text-right text-xs text-gray-500">

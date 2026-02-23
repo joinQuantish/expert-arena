@@ -123,10 +123,10 @@ router.get("/api/leaderboard", async (_req, res) => {
     const result = await pool.query(`
       SELECT
         e.id, e.name, e.category, e.emoji,
-        e.current_balance, e.positions_value, e.total_pnl, e.initial_balance,
-        e.current_balance + e.positions_value as total_value,
+        e.current_balance, COALESCE(e.positions_value, 0) as positions_value, COALESCE(e.total_pnl, 0) as total_pnl, e.initial_balance,
+        e.current_balance + COALESCE(e.positions_value, 0) as total_value,
         CASE WHEN e.initial_balance > 0
-          THEN ((e.current_balance + e.positions_value - e.initial_balance) / e.initial_balance) * 100
+          THEN ((e.current_balance + COALESCE(e.positions_value, 0) - e.initial_balance) / e.initial_balance) * 100
           ELSE 0
         END as return_pct,
         (SELECT COUNT(*) FROM positions p WHERE p.expert_id = e.id AND p.size > 0) as position_count,
@@ -149,11 +149,11 @@ router.get("/api/stats", async (_req, res) => {
     const experts = await pool.query(`
       SELECT
         COUNT(*) as total_experts,
-        SUM(current_balance + positions_value) as total_aum,
-        SUM(total_pnl) as total_pnl,
-        MAX(total_pnl) as best_pnl,
-        (SELECT id FROM experts WHERE enabled = true ORDER BY total_pnl DESC LIMIT 1) as best_expert_id,
-        (SELECT name FROM experts WHERE enabled = true ORDER BY total_pnl DESC LIMIT 1) as best_expert_name
+        SUM(current_balance + COALESCE(positions_value, 0)) as total_aum,
+        SUM(COALESCE(total_pnl, 0)) as total_pnl,
+        MAX(COALESCE(total_pnl, 0)) as best_pnl,
+        (SELECT id FROM experts WHERE enabled = true ORDER BY COALESCE(total_pnl, 0) DESC LIMIT 1) as best_expert_id,
+        (SELECT name FROM experts WHERE enabled = true ORDER BY COALESCE(total_pnl, 0) DESC LIMIT 1) as best_expert_name
       FROM experts WHERE enabled = true
     `);
     const trades = await pool.query("SELECT COUNT(*) as total_trades FROM trades");

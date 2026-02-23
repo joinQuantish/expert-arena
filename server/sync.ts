@@ -1,6 +1,9 @@
 import pool from "./db.js";
 import { EXPERTS } from "../config/experts.js";
 import { ethers } from "ethers";
+import { readFileSync } from "fs";
+import { fileURLToPath } from "url";
+import path from "path";
 
 const USDC_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
 const USDC_ABI = ["function balanceOf(address) view returns (uint256)"];
@@ -300,14 +303,41 @@ export async function runSync() {
 }
 
 export async function seedExperts() {
+  // Load wallet addresses from public config if available
+  let walletMap = new Map<string, { walletAddress: string; automationId: string }>();
+  try {
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const configPath = path.resolve(__dirname, "../config/experts-public.json");
+    const publicConfig = JSON.parse(readFileSync(configPath, "utf-8"));
+    for (const entry of publicConfig) {
+      walletMap.set(entry.id, {
+        walletAddress: entry.walletAddress,
+        automationId: entry.automationId,
+      });
+    }
+  } catch {
+    console.log("[sync] No public config found, seeding without wallet addresses");
+  }
+
   for (const expert of EXPERTS) {
+    const wallet = walletMap.get(expert.id);
     await pool.query(
-      `INSERT INTO experts (id, name, category, emoji, description)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO experts (id, name, category, emoji, description, wallet_address, automation_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        ON CONFLICT (id) DO UPDATE SET
-         name = $2, category = $3, emoji = $4, description = $5`,
-      [expert.id, expert.name, expert.category, expert.emoji, expert.description]
+         name = $2, category = $3, emoji = $4, description = $5,
+         wallet_address = COALESCE($6, experts.wallet_address),
+         automation_id = COALESCE($7, experts.automation_id)`,
+      [
+        expert.id,
+        expert.name,
+        expert.category,
+        expert.emoji,
+        expert.description,
+        wallet?.walletAddress || null,
+        wallet?.automationId || null,
+      ]
     );
   }
-  console.log("[sync] Experts seeded");
+  console.log(`[sync] Experts seeded (${walletMap.size} with wallets)`);
 }

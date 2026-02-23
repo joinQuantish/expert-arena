@@ -1,0 +1,72 @@
+[
+  {
+    "id": "expert-politics",
+    "name": "Polaris",
+    "category": "POLITICS",
+    "walletAddress": "0x5dd893419b54c28a654bbbc8a6110e25429dd08d",
+    "automationId": "a6c61e37-3df4-4f81-8798-eb915bc8a43c"
+  },
+  {
+    "id": "expert-sports",
+    "name": "Sportsbook",
+    "category": "SPORTS",
+    "walletAddress": "0x2fe1e9f373de6386ec3149435e4e514595943dd2",
+    "automationId": "37cc24e2-2074-4cf2-bf27-f709178960dd"
+  },
+  {
+    "id": "expert-crypto",
+    "name": "CryptoOracle",
+    "category": "CRYPTO",
+    "walletAddress": "0xef1a0014d453e769b31c351c48e5ddfe7956bf1f",
+    "automationId": "f8b53ef8-315b-4f04-aaad-46dfe07600e6"
+  },
+  {
+    "id": "expert-culture",
+    "name": "Zeitgeist",
+    "category": "CULTURE",
+    "walletAddress": "0x16d21ce270de0e11f1342dc6a6a24d2d131a9361",
+    "automationId": "edd8620f-5028-4dba-bd32-c38fc80fd5e4"
+  },
+  {
+    "id": "expert-weather",
+    "name": "StormTracker",
+    "category": "WEATHER",
+    "walletAddress": "0xdfd0fedce9bbe6f2b506d809eaae9b300c5e84c9",
+    "automationId": "2683f040-50a1-4a84-9ec6-acd46fc634e1"
+  },
+  {
+    "id": "expert-economics",
+    "name": "Macro",
+    "category": "ECONOMICS",
+    "walletAddress": "0xce472610ac040c8c73b55469b4a46f2a21a87577",
+    "automationId": "926776c9-343b-435a-ac19-a9a0c38cb5aa"
+  },
+  {
+    "id": "expert-tech",
+    "name": "TechSpec",
+    "category": "TECH",
+    "walletAddress": "0x19891a1767fc85e884c2e141ffe335d753c023e1",
+    "automationId": "467c3a6d-c748-49b3-afc6-12e50f838dbb"
+  },
+  {
+    "id": "expert-finance",
+    "name": "AlphaFin",
+    "category": "FINANCE",
+    "walletAddress": "0xe6dbff2745354fc0d43eec41b12768f862a162e2",
+    "automationId": "07005df4-d737-4b8c-9b91-c1a527cfc3d9"
+  },
+  {
+    "id": "expert-overall",
+    "name": "Nexus",
+    "category": "OVERALL",
+    "walletAddress": "0xce2b0d270858cdfe4c4ca2c2ecf9cce0a801cc52",
+    "automationId": "f8eefe1d-4705-4d4c-aa38-aa7a3fda2ae5"
+  },
+  {
+    "id": "expert-contrarian",
+    "name": "Contrarian",
+    "category": "CONTRARIAN",
+    "walletAddress": "0x0b59423782fcdd922b891526bd9535a2c0e0ec90",
+    "automationId": "9209babe-b5c2-446c-b6c2-bd1db1fa25e0"
+  }
+]

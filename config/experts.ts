@@ -8,6 +8,7 @@ export interface Expert {
   newsSources: string;
   categoryInstructions: string;
   scheduleOffsetMin: number;
+  targetResolution: string;
 }
 
 export const EXPERTS: Expert[] = [
@@ -20,6 +21,7 @@ export const EXPERTS: Expert[] = [
     description: "Elections, policy decisions, geopolitics, and government actions.",
     newsSources: "AP News, Reuters, Politico, The Hill, RealClearPolitics",
     scheduleOffsetMin: 0,
+    targetResolution: "within the next 1-2 weeks",
     categoryInstructions: `Your domain: Elections, policy decisions, appointments, legislation, geopolitics.
 News sources: AP News, Reuters, Politico, The Hill, RealClearPolitics.
 Edge opportunities: Poll movements, legislative votes, executive actions, diplomatic shifts.
@@ -34,6 +36,7 @@ Watch for: Primary results, cabinet reshuffles, Supreme Court decisions, sanctio
     description: "Championships, playoffs, player milestones, and tournament outcomes.",
     newsSources: "ESPN, The Athletic, official league sites, injury reports",
     scheduleOffsetMin: 24,
+    targetResolution: "within the next 1-3 days",
     categoryInstructions: `Your domain: Championships, playoffs, tournament outcomes, season records, player milestones.
 News sources: ESPN, The Athletic, official league sites, injury reports.
 Edge opportunities: Injury news, lineup changes, momentum shifts, playoff seeding math.
@@ -48,6 +51,7 @@ Watch for: Trade deadlines, injury reports, weather impacts on games, coaching c
     description: "Price milestones, ETF decisions, protocol upgrades, and regulatory actions.",
     newsSources: "CoinDesk, The Block, Decrypt, official protocol blogs",
     scheduleOffsetMin: 48,
+    targetResolution: "within the next 1-7 days",
     categoryInstructions: `Your domain: Price milestones, ETF decisions, protocol upgrades, regulatory actions, adoption events.
 News sources: CoinDesk, The Block, Decrypt, official protocol blogs.
 Edge opportunities: Regulatory rulings, ETF filings, major chain upgrades, exchange listings.
@@ -62,6 +66,7 @@ Watch for: SEC actions, Fed policy impact on crypto, halving effects, DeFi explo
     description: "Awards shows, entertainment, celebrity events, and viral moments.",
     newsSources: "Variety, Hollywood Reporter, Billboard, social media trends",
     scheduleOffsetMin: 72,
+    targetResolution: "within the next 1-2 weeks",
     categoryInstructions: `Your domain: Awards shows, entertainment, celebrity events, viral moments, media.
 News sources: Variety, Hollywood Reporter, Billboard, social media trends.
 Edge opportunities: Awards season predictions, box office performance, album drops, viral events.
@@ -76,6 +81,7 @@ Watch for: Nominations, early reviews, streaming numbers, social media momentum.
     description: "Temperature records, storms, hurricanes, and seasonal forecasts.",
     newsSources: "NOAA, Weather.com, NHC, Weather Underground, AccuWeather",
     scheduleOffsetMin: 96,
+    targetResolution: "within the next 1-2 weeks",
     categoryInstructions: `Your domain: Temperature records, storms, hurricanes, seasonal forecasts, climate events.
 News sources: NOAA, Weather.com, NHC, Weather Underground, AccuWeather.
 Edge opportunities: Forecast model disagreements, historical pattern breaks, seasonal anomalies.
@@ -90,6 +96,7 @@ Watch for: Hurricane season activity, heat records, polar vortex events, El Nino
     description: "Inflation, GDP, interest rates, employment, and central bank actions.",
     newsSources: "Bloomberg, CNBC, Federal Reserve, BLS, IMF reports",
     scheduleOffsetMin: 120,
+    targetResolution: "within the next 1-2 weeks",
     categoryInstructions: `Your domain: Inflation, GDP, interest rates, employment, trade policy, central bank actions.
 News sources: Bloomberg, CNBC, Federal Reserve, BLS, IMF reports.
 Edge opportunities: Data releases vs consensus, Fed meeting outcomes, trade negotiations.
@@ -104,6 +111,7 @@ Watch for: CPI/PPI releases, FOMC decisions, jobs reports, GDP revisions, tariff
     description: "Product launches, AI developments, antitrust, and tech earnings.",
     newsSources: "The Verge, TechCrunch, Ars Technica, company blogs, SEC filings",
     scheduleOffsetMin: 144,
+    targetResolution: "within the next 1-2 weeks",
     categoryInstructions: `Your domain: Product launches, AI developments, antitrust, tech earnings, platform changes.
 News sources: The Verge, TechCrunch, Ars Technica, company blogs, SEC filings.
 Edge opportunities: Earnings surprises, regulatory rulings, product delays, AI breakthroughs.
@@ -118,6 +126,7 @@ Watch for: Antitrust cases, chip supply dynamics, AI model releases, app store p
     description: "Stock market milestones, M&A activity, IPOs, and commodities.",
     newsSources: "Bloomberg, WSJ, Financial Times, CNBC, SEC filings",
     scheduleOffsetMin: 168,
+    targetResolution: "within the next 1-2 weeks",
     categoryInstructions: `Your domain: Stock market milestones, M&A activity, IPOs, banking, commodities.
 News sources: Bloomberg, WSJ, Financial Times, CNBC, SEC filings.
 Edge opportunities: M&A rumors vs reality, IPO pricing, index rebalancing, earnings seasons.
@@ -132,6 +141,7 @@ Watch for: Rate decisions impact on equities, commodity supply shocks, bank stre
     description: "Diversified generalist finding the best opportunities across all categories.",
     newsSources: "All major news outlets, breaking news, cross-category events",
     scheduleOffsetMin: 192,
+    targetResolution: "within the next 1-2 weeks",
     categoryInstructions: `Your domain: ALL categories. You are the generalist who finds the best opportunities anywhere.
 News sources: All major news outlets. Focus on breaking news and cross-category events.
 Edge opportunities: Cross-category correlations (e.g., politics affecting markets, weather affecting commodities).
@@ -147,6 +157,7 @@ Watch for: Black swan events, surprise developments, markets that haven't update
     description: "Bets against the crowd. Finds overpriced consensus and fades it.",
     newsSources: "All major news outlets, sentiment analysis, crowd behavior",
     scheduleOffsetMin: 216,
+    targetResolution: "within the next 1-2 weeks",
     categoryInstructions: `Your domain: ALL categories, but you ONLY bet against the crowd.
 Strategy: Find markets where one outcome is priced above 75%. Bet on the underdog.
 Thesis: Crowds overreact to narratives. Extreme prices (>80%) often overcorrect.
@@ -185,6 +196,7 @@ You run every 4 hours. Your capital is limited ($10 total) so trade carefully an
    - ${searchInstruction}
    - Focus on markets with decent volume (not dead markets nobody trades)
    - Prefer very liquid markets so you can exit positions easily if needed
+   - Target markets that are resolving soon — ideally ${expert.targetResolution}
    - Look for markets where current price disagrees with your research
    - ONLY trade if you have genuine conviction. No trade is better than a bad trade.
 

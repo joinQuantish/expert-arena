@@ -18,6 +18,10 @@ interface Expert {
   position_count: number;
   trade_count: number;
   updated_at: string;
+  agent_type?: string;
+  username?: string;
+  organization?: string;
+  registered_at?: string;
 }
 
 interface Snapshot {
@@ -31,6 +35,8 @@ export default function ExpertDetail() {
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [tab, setTab] = useState<"positions" | "trades" | "research">("positions");
   const [loading, setLoading] = useState(true);
+
+  const isRegistered = expert?.agent_type === "registered";
 
   useEffect(() => {
     if (!id) return;
@@ -47,7 +53,7 @@ export default function ExpertDetail() {
   if (loading || !expert) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading expert...</div>
+        <div className="text-pn-text-muted">Loading agent...</div>
       </div>
     );
   }
@@ -60,28 +66,54 @@ export default function ExpertDetail() {
     ? ((totalValue - expert.initial_balance) / expert.initial_balance) * 100
     : 0;
 
+  const tabs = isRegistered
+    ? (["positions", "trades"] as const)
+    : (["positions", "trades", "research"] as const);
+
   return (
     <div>
-      <Link to="/" className="text-sm text-gray-500 hover:text-gray-300 mb-4 inline-block">
-        &larr; Back to Arena
+      <Link to="/leaderboard" className="text-sm text-pn-text-muted hover:text-pn-text-secondary mb-4 inline-block">
+        &larr; Back to Leaderboard
       </Link>
 
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 mb-6">
+      <div className="pn-card p-6 mb-6">
         <div className="flex items-start justify-between">
           <div>
             <div className="flex items-center gap-3">
-              <span className="text-3xl">{expert.emoji}</span>
+              <span className="text-3xl">{expert.emoji || "🤖"}</span>
               <div>
-                <h1 className="text-2xl font-bold">{expert.name}</h1>
-                <span className="text-sm px-2 py-0.5 rounded bg-gray-800 text-gray-400">
-                  {expert.category}
-                </span>
+                <h1 className="text-2xl font-bold text-[#E6E4E0]">{expert.name}</h1>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-sm px-2 py-0.5 rounded bg-pn-elevated text-pn-text-muted">
+                    {expert.category}
+                  </span>
+                  {isRegistered ? (
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      REGISTERED
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-pn-accent/10 text-pn-accent border border-pn-accent/20">
+                      ARENA
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-            <p className="text-gray-400 mt-2 text-sm max-w-lg">{expert.description}</p>
+            {expert.description && (
+              <p className="text-pn-text-muted mt-2 text-sm max-w-lg">{expert.description}</p>
+            )}
+            {isRegistered && (
+              <div className="mt-2 flex items-center gap-3 text-xs text-pn-text-muted">
+                {expert.username && <span className="font-mono">@{expert.username}</span>}
+                {expert.organization && <span>{expert.organization}</span>}
+                {expert.registered_at && (
+                  <span>Joined {new Date(expert.registered_at).toLocaleDateString()}</span>
+                )}
+              </div>
+            )}
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold">${totalValue.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-[#E6E4E0]">${totalValue.toFixed(2)}</div>
             <div className={`text-sm font-semibold ${returnPct >= 0 ? "text-green-400" : "text-red-400"}`}>
               {returnPct >= 0 ? "+" : ""}{returnPct.toFixed(1)}% return
             </div>
@@ -100,13 +132,13 @@ export default function ExpertDetail() {
         </div>
 
         {expert.wallet_address && (
-          <div className="mt-4 text-xs text-gray-600">
+          <div className="mt-4 text-xs text-pn-text-muted/60">
             Wallet:{" "}
             <a
               href={`https://polygonscan.com/address/${expert.wallet_address}`}
               target="_blank"
               rel="noopener"
-              className="text-gray-500 hover:text-gray-300 font-mono"
+              className="text-pn-text-muted hover:text-pn-text-secondary font-mono"
             >
               {expert.wallet_address.slice(0, 6)}...{expert.wallet_address.slice(-4)}
             </a>
@@ -114,24 +146,22 @@ export default function ExpertDetail() {
         )}
       </div>
 
-      {/* Equity chart (simple text-based for now) */}
       {snapshots.length > 1 && (
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 mb-6">
-          <h3 className="text-sm text-gray-400 mb-3">Portfolio Value (30d)</h3>
+        <div className="pn-card p-4 mb-6">
+          <h3 className="text-sm text-pn-text-muted mb-3">Portfolio Value (30d)</h3>
           <MiniChart snapshots={snapshots} initial={expert.initial_balance} />
         </div>
       )}
 
-      {/* Tab navigation */}
-      <div className="flex gap-1 mb-4 border-b border-gray-800">
-        {(["positions", "trades", "research"] as const).map((t) => (
+      <div className="flex gap-1 mb-4 border-b border-pn-border">
+        {tabs.map((t) => (
           <button
             key={t}
-            onClick={() => setTab(t)}
+            onClick={() => setTab(t as typeof tab)}
             className={`px-4 py-2 text-sm font-medium capitalize transition ${
               tab === t
-                ? "text-white border-b-2 border-blue-500"
-                : "text-gray-500 hover:text-gray-300"
+                ? "text-pn-accent border-b-2 border-pn-accent"
+                : "text-pn-text-muted hover:text-pn-text-secondary"
             }`}
           >
             {t}
@@ -141,7 +171,7 @@ export default function ExpertDetail() {
 
       {tab === "positions" && <PositionTable expertId={expert.id} />}
       {tab === "trades" && <TradeHistory expertId={expert.id} />}
-      {tab === "research" && <ResearchFeed expertId={expert.id} />}
+      {tab === "research" && !isRegistered && <ResearchFeed expertId={expert.id} />}
     </div>
   );
 }
@@ -149,8 +179,8 @@ export default function ExpertDetail() {
 function MiniStat({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
     <div>
-      <div className="text-xs text-gray-500">{label}</div>
-      <div className={`text-lg font-semibold ${color || "text-white"}`}>{value}</div>
+      <div className="text-xs text-pn-text-muted">{label}</div>
+      <div className={`text-lg font-semibold ${color || "text-[#E6E4E0]"}`}>{value}</div>
     </div>
   );
 }

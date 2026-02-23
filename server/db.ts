@@ -88,5 +88,18 @@ export async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_research_timestamp ON research_logs(timestamp DESC);
   `);
 
+  // Migration: add columns for open registration
+  await pool.query(`
+    ALTER TABLE experts ADD COLUMN IF NOT EXISTS username TEXT;
+    ALTER TABLE experts ADD COLUMN IF NOT EXISTS organization TEXT;
+    ALTER TABLE experts ADD COLUMN IF NOT EXISTS agent_type TEXT DEFAULT 'internal';
+    ALTER TABLE experts ADD COLUMN IF NOT EXISTS registered_at TIMESTAMP;
+    ALTER TABLE experts ADD COLUMN IF NOT EXISTS external_id TEXT;
+  `);
+  await pool.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_experts_username ON experts(username) WHERE username IS NOT NULL;
+    CREATE INDEX IF NOT EXISTS idx_experts_external_id ON experts(external_id) WHERE external_id IS NOT NULL;
+  `);
+
   console.log("[db] Schema initialized");
 }

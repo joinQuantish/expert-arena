@@ -1,7 +1,16 @@
 import { Router } from "express";
 import pool from "./db.js";
+import { registerLimiter } from "./middleware.js";
+import { validateUsername, validateWalletAddress, validateName } from "./validation.js";
+import { verifyWallet } from "./verify.js";
+import { ethers } from "ethers";
 
 const router = Router();
+
+const USDC_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
+const USDC_ABI = ["function balanceOf(address) view returns (uint256)"];
+const POLYGON_RPC = process.env.POLYGON_RPC_URL || "https://polygon-rpc.com";
+const DATA_API = "https://data-api.polymarket.com";
 
 // Health check
 router.get("/api/health", (_req, res) => {
@@ -38,6 +47,26 @@ router.get("/api/experts/:id", async (req, res) => {
     );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Expert not found" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal error" });
+  }
+});
+
+// Lookup by username
+router.get("/api/agents/:username", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT e.*,
+        (SELECT COUNT(*) FROM positions p WHERE p.expert_id = e.id AND p.size > 0) as position_count,
+        (SELECT COUNT(*) FROM trades t WHERE t.expert_id = e.id) as trade_count
+       FROM experts e WHERE e.username = $1`,
+      [req.params.username.toLowerCase()]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Agent not found" });
     }
     res.json(result.rows[0]);
   } catch (err) {
@@ -122,7 +151,7 @@ router.get("/api/leaderboard", async (_req, res) => {
   try {
     const result = await pool.query(`
       SELECT
-        e.id, e.name, e.category, e.emoji,
+        e.id, e.name, e.category, e.emoji, e.username, e.agent_type, e.organization, e.registered_at,
         e.current_balance, COALESCE(e.positions_value, 0) as positions_value, COALESCE(e.total_pnl, 0) as total_pnl, e.initial_balance,
         e.current_balance + COALESCE(e.positions_value, 0) as total_value,
         CASE WHEN e.initial_balance > 0
@@ -149,6 +178,7 @@ router.get("/api/stats", async (_req, res) => {
     const experts = await pool.query(`
       SELECT
         COUNT(*) as total_experts,
+        COUNT(*) FILTER (WHERE agent_type = 'registered') as registered_count,
         SUM(current_balance + COALESCE(positions_value, 0)) as total_aum,
         SUM(COALESCE(total_pnl, 0)) as total_pnl,
         MAX(COALESCE(total_pnl, 0)) as best_pnl,
@@ -165,6 +195,106 @@ router.get("/api/stats", async (_req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal error" });
+  }
+});
+
+// Agent registration
+router.post("/api/register", registerLimiter, async (req, res) => {
+  try {
+    const { name, username, wallet_address, external_id, organization } = req.body;
+
+    // Validate inputs
+    const nameErr = validateName(name);
+    if (nameErr) return res.status(400).json({ error: nameErr });
+
+    const usernameErr = validateUsername(username);
+    if (usernameErr) return res.status(400).json({ error: usernameErr });
+
+    const walletErr = validateWalletAddress(wallet_address);
+    if (walletErr) return res.status(400).json({ error: walletErr });
+
+    if (!external_id || typeof external_id !== "string" || external_id.length < 1 || external_id.length > 100) {
+      return res.status(400).json({ error: "external_id is required (1-100 chars)" });
+    }
+
+    if (organization && (typeof organization !== "string" || organization.length > 100)) {
+      return res.status(400).json({ error: "organization must be a string under 100 chars" });
+    }
+
+    // Check username uniqueness
+    const existingUser = await pool.query(
+      "SELECT id FROM experts WHERE username = $1",
+      [username]
+    );
+    if (existingUser.rows.length > 0) {
+      return res.status(409).json({ error: "Username already taken" });
+    }
+
+    // Check wallet uniqueness
+    const existingWallet = await pool.query(
+      "SELECT id FROM experts WHERE LOWER(wallet_address) = LOWER($1)",
+      [wallet_address]
+    );
+    if (existingWallet.rows.length > 0) {
+      return res.status(409).json({ error: "Wallet address already registered" });
+    }
+
+    // Verify wallet via MCP
+    const verification = await verifyWallet(external_id, wallet_address);
+    if (!verification.valid) {
+      return res.status(403).json({ error: verification.error });
+    }
+
+    // Fetch current USDC balance for P&L baseline
+    let cashBalance = 0;
+    try {
+      const provider = new ethers.JsonRpcProvider(POLYGON_RPC);
+      const usdc = new ethers.Contract(USDC_ADDRESS, USDC_ABI, provider);
+      const bal = await usdc.balanceOf(wallet_address);
+      cashBalance = parseFloat(ethers.formatUnits(bal, 6));
+    } catch {
+      // Non-fatal: default to 0
+    }
+
+    // Fetch current positions value from Polymarket
+    let positionsValue = 0;
+    try {
+      const posRes = await fetch(`${DATA_API}/positions?user=${wallet_address}`);
+      if (posRes.ok) {
+        const positions: { size: number; curPrice: number }[] = await posRes.json();
+        for (const pos of positions) {
+          const size = Number(pos.size) || 0;
+          const price = Number(pos.curPrice) || 0;
+          if (size > 0) positionsValue += size * price;
+        }
+      }
+    } catch {
+      // Non-fatal: default to 0
+    }
+
+    const initialBalance = cashBalance + positionsValue;
+    const agentId = `agent-${username}`;
+
+    await pool.query(
+      `INSERT INTO experts (id, name, category, emoji, description, wallet_address, initial_balance, current_balance, positions_value, agent_type, username, organization, registered_at, external_id, enabled)
+       VALUES ($1, $2, 'REGISTERED', '', '', $3, $4, $5, $6, 'registered', $7, $8, NOW(), $9, true)`,
+      [agentId, name, wallet_address, initialBalance, cashBalance, positionsValue, username, organization || null, external_id]
+    );
+
+    res.status(201).json({
+      success: true,
+      agent: {
+        id: agentId,
+        name,
+        username,
+        wallet_address,
+        initial_balance: initialBalance,
+        registered_at: new Date().toISOString(),
+      },
+    });
+  } catch (err) {
+    console.error("[register]", err);
+    res.status(500).json({ error: "Registration failed" });
   }
 });
 

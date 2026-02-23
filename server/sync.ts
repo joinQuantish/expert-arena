@@ -337,12 +337,13 @@ export async function seedExperts() {
   for (const expert of EXPERTS) {
     const wallet = walletMap.get(expert.id);
     await pool.query(
-      `INSERT INTO experts (id, name, category, emoji, description, wallet_address, automation_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO experts (id, name, category, emoji, description, wallet_address, automation_id, agent_type)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'internal')
        ON CONFLICT (id) DO UPDATE SET
          name = $2, category = $3, emoji = $4, description = $5,
          wallet_address = COALESCE($6, experts.wallet_address),
-         automation_id = COALESCE($7, experts.automation_id)`,
+         automation_id = COALESCE($7, experts.automation_id),
+         agent_type = 'internal'`,
       [
         expert.id,
         expert.name,

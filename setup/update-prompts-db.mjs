@@ -6,7 +6,8 @@
 
 import pg from "pg";
 
-const DB_URL = "postgresql://postgres:***REDACTED***@maglev.proxy.rlwy.net:38384/railway";
+const DB_URL = process.env.CLAUDIABOT_DATABASE_URL;
+if (!DB_URL) { console.error("CLAUDIABOT_DATABASE_URL required"); process.exit(1); }
 
 // Import expert config dynamically (TypeScript, so we duplicate the data here)
 // To keep in sync: edit config/experts.ts, then mirror changes here and run.

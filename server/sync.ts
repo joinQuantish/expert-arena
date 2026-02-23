@@ -32,27 +32,27 @@ async function getClaudiabotPool() {
 interface PolymarketPosition {
   asset: string;
   conditionId: string;
-  size: string;
-  avgPrice: string;
-  currentPrice: string;
-  market: string;
-  marketSlug: string;
+  size: number;
+  avgPrice: number;
+  curPrice: number;
+  title: string;
+  slug: string;
   outcome: string;
-  pnl: string;
+  cashPnl: number;
 }
 
 interface PolymarketActivity {
-  id: string;
+  transactionHash: string;
   type: string;
   asset: string;
   conditionId: string;
-  market: string;
+  title: string;
   slug: string;
   outcome: string;
   side: string;
-  price: string;
-  size: string;
-  timestamp: string;
+  price: number;
+  size: number;
+  timestamp: number;
 }
 
 async function syncBalances() {
@@ -99,12 +99,12 @@ async function syncPositions() {
       let totalPnl = 0;
 
       for (const pos of positions) {
-        const size = parseFloat(pos.size);
+        const size = Number(pos.size) || 0;
         if (size === 0) continue;
 
-        const avgPrice = parseFloat(pos.avgPrice);
-        const currentPrice = parseFloat(pos.currentPrice);
-        const pnl = size * (currentPrice - avgPrice);
+        const avgPrice = Number(pos.avgPrice) || 0;
+        const currentPrice = Number(pos.curPrice) || 0;
+        const pnl = Number(pos.cashPnl) || 0;
         const posValue = size * currentPrice;
         totalPositionsValue += posValue;
         totalPnl += pnl;
@@ -119,8 +119,8 @@ async function syncPositions() {
             expert.id,
             pos.conditionId,
             pos.asset,
-            pos.marketSlug,
-            pos.market,
+            pos.slug || "",
+            pos.title || "Unknown",
             pos.outcome,
             size,
             avgPrice,
@@ -155,20 +155,21 @@ async function syncTrades() {
 
       for (const act of activities) {
         if (act.type !== "TRADE") continue;
+        const tradeId = act.transactionHash || `${expert.id}-${act.timestamp}-${act.asset}`;
         await pool.query(
           `INSERT INTO trades (id, expert_id, market_slug, market_title, outcome, side, price, size, timestamp)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
            ON CONFLICT (id) DO NOTHING`,
           [
-            act.id,
+            tradeId,
             expert.id,
-            act.slug,
-            act.market,
+            act.slug || "",
+            act.title || "Unknown",
             act.outcome,
             act.side,
-            parseFloat(act.price),
-            parseFloat(act.size),
-            new Date(act.timestamp),
+            Number(act.price) || 0,
+            Number(act.size) || 0,
+            new Date(act.timestamp * 1000),
           ]
         );
       }

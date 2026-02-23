@@ -184,6 +184,7 @@ You run every 4 hours. Your capital is limited ($10 total) so trade carefully an
 4. FIND MARKETS
    - ${searchInstruction}
    - Focus on markets with decent volume (not dead markets nobody trades)
+   - Prefer very liquid markets so you can exit positions easily if needed
    - Look for markets where current price disagrees with your research
    - ONLY trade if you have genuine conviction. No trade is better than a bad trade.
 

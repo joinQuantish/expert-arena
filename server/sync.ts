@@ -306,14 +306,28 @@ export async function seedExperts() {
   // Load wallet addresses from public config if available
   let walletMap = new Map<string, { walletAddress: string; automationId: string }>();
   try {
+    // Try multiple possible locations (dev vs Docker build)
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
-    const configPath = path.resolve(__dirname, "../config/experts-public.json");
-    const publicConfig = JSON.parse(readFileSync(configPath, "utf-8"));
-    for (const entry of publicConfig) {
-      walletMap.set(entry.id, {
-        walletAddress: entry.walletAddress,
-        automationId: entry.automationId,
-      });
+    const candidates = [
+      path.resolve(__dirname, "../config/experts-public.json"),
+      path.resolve(__dirname, "../../config/experts-public.json"),
+      path.resolve(process.cwd(), "config/experts-public.json"),
+    ];
+    let configData: string | null = null;
+    for (const p of candidates) {
+      try {
+        configData = readFileSync(p, "utf-8");
+        break;
+      } catch {}
+    }
+    if (configData) {
+      const publicConfig = JSON.parse(configData);
+      for (const entry of publicConfig) {
+        walletMap.set(entry.id, {
+          walletAddress: entry.walletAddress,
+          automationId: entry.automationId,
+        });
+      }
     }
   } catch {
     console.log("[sync] No public config found, seeding without wallet addresses");

@@ -15,6 +15,7 @@ interface Expert {
   reward_scoring?: boolean;
   reward_daily_rate?: number;
   reward_earnings_today?: number;
+  reward_market_title?: string;
 }
 
 export default function ExpertCard({ expert, rank }: { expert: Expert; rank: number }) {
@@ -22,6 +23,9 @@ export default function ExpertCard({ expert, rank }: { expert: Expert; rank: num
   const returnPct = expert.return_pct || 0;
   const isPositive = returnPct >= 0;
   const isRegistered = expert.agent_type === "registered";
+  const dailyRate = Number(expert.reward_daily_rate) || 0;
+  const earningsToday = Number(expert.reward_earnings_today) || 0;
+  const hasRewardData = expert.reward_scoring || dailyRate > 0 || earningsToday > 0;
 
   return (
     <div className="pn-card p-4 hover:border-pn-text-muted/40 transition cursor-pointer group">
@@ -53,20 +57,31 @@ export default function ExpertCard({ expert, rank }: { expert: Expert; rank: num
         </div>
       </div>
 
-      {expert.reward_scoring && (
-        <div className="flex items-center gap-1.5 mb-2">
-          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse">
-            EARNING REWARDS
-          </span>
-          {(expert.reward_daily_rate ?? 0) > 0 && (
-            <span className="text-[10px] text-amber-400/70">
-              ~${(expert.reward_daily_rate ?? 0).toFixed(2)}/day
+      {hasRewardData && (
+        <div className="mb-2 p-1.5 rounded bg-amber-500/5 border border-amber-500/10">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${
+              expert.reward_scoring
+                ? "bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse"
+                : "bg-pn-elevated text-pn-text-muted border-pn-border"
+            }`}>
+              {expert.reward_scoring ? "EARNING REWARDS" : "ON REWARD MARKET"}
             </span>
-          )}
-          {(expert.reward_earnings_today ?? 0) > 0 && (
-            <span className="text-[10px] text-green-400/80">
-              +${(expert.reward_earnings_today ?? 0).toFixed(2)} today
-            </span>
+            {dailyRate > 0 && (
+              <span className="text-[10px] text-amber-400/80 font-medium">
+                ~${dailyRate.toFixed(2)}/day
+              </span>
+            )}
+            {earningsToday > 0 && (
+              <span className="text-[10px] text-green-400/80 font-medium">
+                +${earningsToday.toFixed(2)} earned
+              </span>
+            )}
+          </div>
+          {expert.reward_market_title && (
+            <div className="text-[10px] text-pn-text-muted/70 mt-1 truncate">
+              {expert.reward_market_title}
+            </div>
           )}
         </div>
       )}

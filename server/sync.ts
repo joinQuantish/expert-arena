@@ -274,6 +274,8 @@ interface ParsedReport {
   rawReport: string;
   rewardScoring?: boolean;
   rewardEarningsToday?: number;
+  rewardDailyRate?: number;
+  rewardMarketTitle?: string;
 }
 
 function parseReport(output: string, expertName: string): ParsedReport | null {
@@ -285,19 +287,30 @@ function parseReport(output: string, expertName: string): ParsedReport | null {
 
   const report = output.substring(startIdx + startMarker.length, endIdx).trim();
 
+  // Split report into labeled sections — handles both plain and **bold** labels
   const extract = (label: string): string => {
-    const regex = new RegExp(`${label}:\\s*(.+?)(?=\\n[A-Z][ A-Z]*:|$)`, "s");
+    // Match "LABEL:" or "**LABEL:**" or "**LABEL**:" at start of line
+    const regex = new RegExp(
+      `(?:^|\\n)\\**${label}\\**:?\\s*(.+?)(?=\\n\\**[A-Z][A-Z ]*\\**:|$)`,
+      "s"
+    );
     const match = report.match(regex);
     return match ? match[1].trim() : "";
   };
 
-  // Parse LP-specific reward fields
+  // Parse LP-specific reward fields from REWARD STATUS line
+  // Format: "scoring/not scoring | Q-score estimate | daily reward estimate"
   const rewardStatusRaw = extract("REWARD STATUS");
   let rewardScoring: boolean | undefined;
+  let rewardDailyRate: number | undefined;
   if (rewardStatusRaw) {
     rewardScoring = /scoring/i.test(rewardStatusRaw) && !/not scoring/i.test(rewardStatusRaw);
+    // Extract daily rate: "$X.XX/day" or "~$X.XX/day" or "$X.XX daily"
+    const rateMatch = rewardStatusRaw.match(/~?\$?([\d.]+)\s*\/?\s*day/i);
+    if (rateMatch) rewardDailyRate = parseFloat(rateMatch[1]);
   }
 
+  // Parse actual earnings
   const earningsRaw = extract("EARNINGS");
   let rewardEarningsToday: number | undefined;
   if (earningsRaw) {
@@ -305,16 +318,39 @@ function parseReport(output: string, expertName: string): ParsedReport | null {
     if (match) rewardEarningsToday = parseFloat(match[1]);
   }
 
-  // Works for both directional and LP report formats
+  // Extract market title from OPEN ORDERS or TRADES THIS SESSION
+  let rewardMarketTitle: string | undefined;
+  const openOrders = extract("OPEN ORDERS");
+  const tradesMade = extract("TRADES THIS SESSION");
+  // Look for market titles in these sections — typically appears as a question or description
+  for (const section of [openOrders, tradesMade, extract("INVENTORY")]) {
+    if (!section) continue;
+    // Match quoted market names or text before a pipe delimiter
+    const titleMatch = section.match(/"([^"]{10,80})"/) ||
+      section.match(/(?:on|market|deployed)[:\s]+([^|,\n]{10,80})/i);
+    if (titleMatch) {
+      rewardMarketTitle = titleMatch[1].trim().replace(/\*+/g, "");
+      break;
+    }
+  }
+
+  // Also try the full report for condition IDs or market references
+  if (!rewardMarketTitle) {
+    const condMatch = report.match(/(?:condition[_\s]?id|market)\s*[:=]?\s*(0x[a-f0-9]{8,})/i);
+    if (condMatch) rewardMarketTitle = `Market ${condMatch[1].slice(0, 10)}...`;
+  }
+
   return {
     summary: extract("RESEARCH"),
-    tradesMade: extract("TRADES THIS SESSION"),
+    tradesMade,
     positionsHeld: extract("POSITIONS HELD") || extract("INVENTORY"),
-    positionsExited: extract("POSITIONS EXITED") || extract("OPEN ORDERS"),
+    positionsExited: extract("POSITIONS EXITED") || openOrders,
     nextMoves: extract("NEXT MOVES"),
     rawReport: report,
     rewardScoring,
     rewardEarningsToday,
+    rewardDailyRate,
+    rewardMarketTitle,
   };
 }
 
@@ -376,14 +412,22 @@ async function syncResearchLogs() {
       );
 
       // Update reward fields on expert if this is an LP report with reward data
-      if (parsed.rewardScoring !== undefined) {
+      if (parsed.rewardScoring !== undefined || parsed.rewardDailyRate !== undefined) {
         await pool.query(
           `UPDATE experts SET
-            reward_scoring = $1,
+            reward_scoring = COALESCE($1, reward_scoring),
             reward_earnings_today = COALESCE($2, reward_earnings_today),
+            reward_daily_rate = COALESCE($3, reward_daily_rate),
+            reward_market_title = CASE WHEN $4 IS NOT NULL AND $4 != '' THEN $4 ELSE reward_market_title END,
             updated_at = NOW()
-          WHERE id = $3`,
-          [parsed.rewardScoring, parsed.rewardEarningsToday ?? null, expertId]
+          WHERE id = $5`,
+          [
+            parsed.rewardScoring ?? null,
+            parsed.rewardEarningsToday ?? null,
+            parsed.rewardDailyRate ?? null,
+            parsed.rewardMarketTitle ?? null,
+            expertId,
+          ]
         );
       }
     }

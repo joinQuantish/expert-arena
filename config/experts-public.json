@@ -4,97 +4,97 @@
     "name": "Polaris",
     "category": "POLITICS",
     "walletAddress": "0x5dd893419b54c28a654bbbc8a6110e25429dd08d",
-    "automationId": "a6c61e37-3df4-4f81-8798-eb915bc8a43c"
+    "automationId": "3f60643f-811d-4a41-8125-29569b724b6f"
   },
   {
     "id": "expert-sports",
     "name": "Sportsbook",
     "category": "SPORTS",
     "walletAddress": "0x2fe1e9f373de6386ec3149435e4e514595943dd2",
-    "automationId": "37cc24e2-2074-4cf2-bf27-f709178960dd"
+    "automationId": "1572fa05-2cb3-419b-830f-54e8d0479e94"
   },
   {
     "id": "expert-crypto",
     "name": "CryptoOracle",
     "category": "CRYPTO",
     "walletAddress": "0xef1a0014d453e769b31c351c48e5ddfe7956bf1f",
-    "automationId": "f8b53ef8-315b-4f04-aaad-46dfe07600e6"
+    "automationId": "4c86f3a4-302b-4c4b-9d98-ec771419fc49"
   },
   {
     "id": "expert-culture",
     "name": "Zeitgeist",
     "category": "CULTURE",
     "walletAddress": "0x16d21ce270de0e11f1342dc6a6a24d2d131a9361",
-    "automationId": "edd8620f-5028-4dba-bd32-c38fc80fd5e4"
+    "automationId": "b0e56790-340b-4714-aab7-e594ddbdb5cb"
   },
   {
     "id": "expert-weather",
     "name": "StormTracker",
     "category": "WEATHER",
     "walletAddress": "0xdfd0fedce9bbe6f2b506d809eaae9b300c5e84c9",
-    "automationId": "2683f040-50a1-4a84-9ec6-acd46fc634e1"
+    "automationId": "b8799782-e4ea-4bf0-a448-6cc264241d8b"
   },
   {
     "id": "expert-economics",
     "name": "Macro",
     "category": "ECONOMICS",
     "walletAddress": "0xce472610ac040c8c73b55469b4a46f2a21a87577",
-    "automationId": "926776c9-343b-435a-ac19-a9a0c38cb5aa"
+    "automationId": "9c0b620c-01ae-4d62-9f2d-f82af11f3abe"
   },
   {
     "id": "expert-tech",
     "name": "TechSpec",
     "category": "TECH",
     "walletAddress": "0x19891a1767fc85e884c2e141ffe335d753c023e1",
-    "automationId": "467c3a6d-c748-49b3-afc6-12e50f838dbb"
+    "automationId": "77aad137-795c-4a87-9372-4e93c91ad536"
   },
   {
     "id": "expert-finance",
     "name": "AlphaFin",
     "category": "FINANCE",
     "walletAddress": "0xe6dbff2745354fc0d43eec41b12768f862a162e2",
-    "automationId": "07005df4-d737-4b8c-9b91-c1a527cfc3d9"
+    "automationId": "7f704864-2fb0-46b5-ac59-4dcfed92df54"
   },
   {
     "id": "expert-overall",
     "name": "Nexus",
     "category": "OVERALL",
     "walletAddress": "0xce2b0d270858cdfe4c4ca2c2ecf9cce0a801cc52",
-    "automationId": "f8eefe1d-4705-4d4c-aa38-aa7a3fda2ae5"
+    "automationId": "fc4bf29f-9f12-4928-ba54-f0bd3598370b"
   },
   {
     "id": "expert-contrarian",
     "name": "Contrarian",
     "category": "CONTRARIAN",
     "walletAddress": "0x0b59423782fcdd922b891526bd9535a2c0e0ec90",
-    "automationId": "9209babe-b5c2-446c-b6c2-bd1db1fa25e0"
+    "automationId": "ccfdb716-7df4-4549-bb46-495df993417c"
   },
   {
     "id": "expert-lp-tightquoter",
     "name": "TightQuoter",
     "category": "LP-TIGHTSPREAD",
     "walletAddress": "0x5ba1031d2e5ada3f349596ec06b02d545fae3436",
-    "automationId": "98b31a69-b3a4-4b80-a4d9-ec5380635079"
+    "automationId": "c005261d-2e80-4e17-9fc8-fe0fdad21810"
   },
   {
     "id": "expert-lp-yieldhunter",
     "name": "YieldHunter",
     "category": "LP-YIELD",
     "walletAddress": "0x16b4d60db82972bbdeac96a40190cb28c780427f",
-    "automationId": "9fd3b18d-ea4a-4f1b-b150-05ba721129e4"
+    "automationId": "c0da328f-e29b-4e1a-8c3a-1ac9ef3f5019"
   },
   {
     "id": "expert-lp-steadymaker",
     "name": "SteadyMaker",
     "category": "LP-STABLE",
     "walletAddress": "0xf1b5e4c74ef4b55cd591eeaa043b045b00779802",
-    "automationId": "3c1dcd14-15cf-4447-b0c0-fae6ffe7bebc"
+    "automationId": "e0504106-f6be-46b4-8aae-3bd23be607d2"
   },
   {
     "id": "expert-lp-skirmisher",
     "name": "Skirmisher",
     "category": "LP-REBALANCE",
     "walletAddress": "0x626bb8fb7acc7aa55e6aab0a1db5e7fd7bb6ce34",
-    "automationId": "f986ef39-50bf-4e53-b8c5-32f0e11b1900"
+    "automationId": "24099eea-7d10-491a-86a2-8d1c5b135235"
   }
 ]

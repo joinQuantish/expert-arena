@@ -68,5 +68,33 @@
     "category": "CONTRARIAN",
     "walletAddress": "0x0b59423782fcdd922b891526bd9535a2c0e0ec90",
     "automationId": "9209babe-b5c2-446c-b6c2-bd1db1fa25e0"
+  },
+  {
+    "id": "expert-lp-tightquoter",
+    "name": "TightQuoter",
+    "category": "LP-TIGHTSPREAD",
+    "walletAddress": "0x5ba1031d2e5ada3f349596ec06b02d545fae3436",
+    "automationId": "98b31a69-b3a4-4b80-a4d9-ec5380635079"
+  },
+  {
+    "id": "expert-lp-yieldhunter",
+    "name": "YieldHunter",
+    "category": "LP-YIELD",
+    "walletAddress": "0x16b4d60db82972bbdeac96a40190cb28c780427f",
+    "automationId": "9fd3b18d-ea4a-4f1b-b150-05ba721129e4"
+  },
+  {
+    "id": "expert-lp-steadymaker",
+    "name": "SteadyMaker",
+    "category": "LP-STABLE",
+    "walletAddress": "0xf1b5e4c74ef4b55cd591eeaa043b045b00779802",
+    "automationId": "3c1dcd14-15cf-4447-b0c0-fae6ffe7bebc"
+  },
+  {
+    "id": "expert-lp-skirmisher",
+    "name": "Skirmisher",
+    "category": "LP-REBALANCE",
+    "walletAddress": "0x626bb8fb7acc7aa55e6aab0a1db5e7fd7bb6ce34",
+    "automationId": "f986ef39-50bf-4e53-b8c5-32f0e11b1900"
   }
 ]

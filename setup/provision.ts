@@ -1,5 +1,5 @@
 import { createHmac } from "crypto";
-import { EXPERTS, buildPrompt } from "../config/experts.js";
+import { EXPERTS, getPrompt } from "../config/experts.js";
 import { readFileSync, writeFileSync, existsSync } from "fs";
 
 const POLYMARKET_MCP = "https://quantish-sdk-production.up.railway.app";
@@ -141,7 +141,7 @@ async function provisionExpert(
 
     // Step 3: Create automation
     console.log(`[${expert.id}] Creating automation...`);
-    const prompt = buildPrompt(expert);
+    const prompt = getPrompt(expert);
     const auth = hmacToken(expert.id);
     const autoRes = await fetch(`${CLAUDIABOT}/internal/automations`, {
       method: "POST",
@@ -150,7 +150,7 @@ async function provisionExpert(
         action: "create",
         telegramId: expert.id,
         name: `${expert.name} - ${expert.category} Expert`,
-        schedule: "every 4h",
+        schedule: expert.schedule || "every 4h",
         prompt,
         token: auth.token,
         timestamp: auth.timestamp,
@@ -213,7 +213,9 @@ async function main() {
       console.log(`Would provision: ${expert.name} (${expert.id})`);
       console.log(`  Category: ${expert.category}`);
       console.log(`  Schedule offset: ${expert.scheduleOffsetMin}min`);
-      console.log(`  Prompt length: ${buildPrompt(expert).length} chars`);
+      console.log(`  Prompt length: ${getPrompt(expert).length} chars`);
+      console.log(`  Schedule: ${expert.schedule || "every 4h"}`);
+      console.log(`  Mode: ${expert.mode || "directional"}`);
     }
     return;
   }

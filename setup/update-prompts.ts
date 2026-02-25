@@ -1,4 +1,4 @@
-import { EXPERTS, buildPrompt } from "../config/experts.js";
+import { EXPERTS, getPrompt } from "../config/experts.js";
 import crypto from "crypto";
 import { readFileSync } from "fs";
 
@@ -21,7 +21,7 @@ async function main() {
       continue;
     }
 
-    const prompt = buildPrompt(expert);
+    const prompt = getPrompt(expert);
     const { token, timestamp } = makeToken(expert.id);
 
     const res = await fetch(`${BASE}/internal/automations`, {

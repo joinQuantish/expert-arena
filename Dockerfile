@@ -6,7 +6,7 @@ COPY package.json package-lock.json* ./
 RUN npm install --production=false
 
 COPY . .
-
+# v2: open registration + phantom noir
 RUN npx vite build
 RUN npx tsc -p tsconfig.server.json
 

@@ -210,16 +210,17 @@ function parseReport(output: string, expertName: string): {
   const report = output.substring(startIdx + startMarker.length, endIdx).trim();
 
   const extract = (label: string): string => {
-    const regex = new RegExp(`${label}:\\s*(.+?)(?=\\n[A-Z]+:|$)`, "s");
+    const regex = new RegExp(`${label}:\\s*(.+?)(?=\\n[A-Z][ A-Z]*:|$)`, "s");
     const match = report.match(regex);
     return match ? match[1].trim() : "";
   };
 
+  // Works for both directional and LP report formats
   return {
     summary: extract("RESEARCH"),
     tradesMade: extract("TRADES THIS SESSION"),
-    positionsHeld: extract("POSITIONS HELD"),
-    positionsExited: extract("POSITIONS EXITED"),
+    positionsHeld: extract("POSITIONS HELD") || extract("INVENTORY"),
+    positionsExited: extract("POSITIONS EXITED") || extract("OPEN ORDERS"),
     nextMoves: extract("NEXT MOVES"),
     rawReport: report,
   };

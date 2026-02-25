@@ -160,6 +160,8 @@ router.get("/api/leaderboard", async (_req, res) => {
         END as return_pct,
         (SELECT COUNT(*) FROM positions p WHERE p.expert_id = e.id AND p.size > 0) as position_count,
         (SELECT COUNT(*) FROM trades t WHERE t.expert_id = e.id) as trade_count,
+        e.reward_scoring, COALESCE(e.reward_daily_rate, 0) as reward_daily_rate,
+        COALESCE(e.reward_earnings_today, 0) as reward_earnings_today, COALESCE(e.reward_market_title, '') as reward_market_title,
         e.updated_at
       FROM experts e
       WHERE e.enabled = true

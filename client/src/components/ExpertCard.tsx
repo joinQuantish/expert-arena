@@ -12,6 +12,9 @@ interface Expert {
   updated_at: string;
   agent_type?: string;
   username?: string;
+  reward_scoring?: boolean;
+  reward_daily_rate?: number;
+  reward_earnings_today?: number;
 }
 
 export default function ExpertCard({ expert, rank }: { expert: Expert; rank: number }) {
@@ -49,6 +52,24 @@ export default function ExpertCard({ expert, rank }: { expert: Expert; rank: num
           #{rank}
         </div>
       </div>
+
+      {expert.reward_scoring && (
+        <div className="flex items-center gap-1.5 mb-2">
+          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse">
+            EARNING REWARDS
+          </span>
+          {(expert.reward_daily_rate ?? 0) > 0 && (
+            <span className="text-[10px] text-amber-400/70">
+              ~${(expert.reward_daily_rate ?? 0).toFixed(2)}/day
+            </span>
+          )}
+          {(expert.reward_earnings_today ?? 0) > 0 && (
+            <span className="text-[10px] text-green-400/80">
+              +${(expert.reward_earnings_today ?? 0).toFixed(2)} today
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="flex items-end justify-between">
         <div>

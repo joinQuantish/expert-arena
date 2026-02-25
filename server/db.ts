@@ -96,6 +96,14 @@ export async function initDb() {
     ALTER TABLE experts ADD COLUMN IF NOT EXISTS registered_at TIMESTAMP;
     ALTER TABLE experts ADD COLUMN IF NOT EXISTS external_id TEXT;
   `);
+
+  // Migration: add reward tracking columns
+  await pool.query(`
+    ALTER TABLE experts ADD COLUMN IF NOT EXISTS reward_scoring BOOLEAN DEFAULT false;
+    ALTER TABLE experts ADD COLUMN IF NOT EXISTS reward_daily_rate NUMERIC DEFAULT 0;
+    ALTER TABLE experts ADD COLUMN IF NOT EXISTS reward_earnings_today NUMERIC DEFAULT 0;
+    ALTER TABLE experts ADD COLUMN IF NOT EXISTS reward_market_title TEXT DEFAULT '';
+  `);
   await pool.query(`
     CREATE UNIQUE INDEX IF NOT EXISTS idx_experts_username ON experts(username) WHERE username IS NOT NULL;
     CREATE INDEX IF NOT EXISTS idx_experts_external_id ON experts(external_id) WHERE external_id IS NOT NULL;

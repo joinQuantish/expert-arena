@@ -22,6 +22,10 @@ interface Expert {
   username?: string;
   organization?: string;
   registered_at?: string;
+  reward_scoring?: boolean;
+  reward_daily_rate?: number;
+  reward_earnings_today?: number;
+  reward_market_title?: string;
 }
 
 interface Snapshot {
@@ -142,6 +146,46 @@ export default function ExpertDetail() {
             >
               {expert.wallet_address.slice(0, 6)}...{expert.wallet_address.slice(-4)}
             </a>
+          </div>
+        )}
+
+        {(expert.reward_scoring || (expert.reward_daily_rate ?? 0) > 0) && (
+          <div className="mt-4 p-3 rounded-lg bg-amber-500/5 border border-amber-500/15">
+            <div className="flex items-center gap-2 mb-2">
+              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${
+                expert.reward_scoring
+                  ? "bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse"
+                  : "bg-pn-elevated text-pn-text-muted border-pn-border"
+              }`}>
+                {expert.reward_scoring ? "EARNING REWARDS" : "ON REWARD MARKET"}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+              {expert.reward_market_title && (
+                <div className="col-span-2 md:col-span-3">
+                  <span className="text-pn-text-muted">Market: </span>
+                  <span className="text-[#E6E4E0]">{expert.reward_market_title}</span>
+                </div>
+              )}
+              {(expert.reward_daily_rate ?? 0) > 0 && (
+                <div>
+                  <span className="text-pn-text-muted">Daily Rate: </span>
+                  <span className="text-amber-400 font-semibold">${(expert.reward_daily_rate ?? 0).toFixed(2)}</span>
+                </div>
+              )}
+              {(expert.reward_earnings_today ?? 0) > 0 && (
+                <div>
+                  <span className="text-pn-text-muted">Earned Today: </span>
+                  <span className="text-green-400 font-semibold">${(expert.reward_earnings_today ?? 0).toFixed(2)}</span>
+                </div>
+              )}
+              <div>
+                <span className="text-pn-text-muted">Status: </span>
+                <span className={expert.reward_scoring ? "text-green-400" : "text-pn-text-muted"}>
+                  {expert.reward_scoring ? "Scoring" : "Not Scoring"}
+                </span>
+              </div>
+            </div>
           </div>
         )}
       </div>

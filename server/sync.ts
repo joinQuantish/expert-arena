@@ -10,6 +10,7 @@ const USDC_ABI = ["function balanceOf(address) view returns (uint256)"];
 const POLYGON_RPC =
   process.env.POLYGON_RPC_URL || "https://polygon-rpc.com";
 const DATA_API = "https://data-api.polymarket.com";
+const CLOB_API = "https://clob.polymarket.com";
 
 // Claudiabot DB for reading automation_logs
 const CLAUDIABOT_DB_URL = process.env.CLAUDIABOT_DATABASE_URL;
@@ -140,6 +141,68 @@ async function syncPositions() {
   }
 }
 
+interface RewardMarket {
+  conditionId: string;
+  rewardsDailyRate: number;
+  maxSpread: number;
+  minSize: number;
+  question?: string;
+}
+
+async function syncRewardMarkets() {
+  try {
+    const res = await fetch(`${CLOB_API}/rewards/markets/current`);
+    if (!res.ok) {
+      console.error(`[sync] Reward markets fetch failed: ${res.status}`);
+      return;
+    }
+    const rewardMarkets: RewardMarket[] = await res.json();
+
+    // Build lookup: conditionId → reward data
+    const rewardMap = new Map<string, RewardMarket>();
+    for (const rm of rewardMarkets) {
+      rewardMap.set(rm.conditionId, rm);
+    }
+
+    // For each expert, check if any of their positions are on reward markets
+    const experts = await pool.query(
+      "SELECT id FROM experts WHERE wallet_address IS NOT NULL"
+    );
+
+    for (const expert of experts.rows) {
+      const positions = await pool.query(
+        "SELECT condition_id, market_title FROM positions WHERE expert_id = $1 AND size > 0",
+        [expert.id]
+      );
+
+      let bestRate = 0;
+      let bestTitle = "";
+
+      for (const pos of positions.rows) {
+        const rm = rewardMap.get(pos.condition_id);
+        if (rm && rm.rewardsDailyRate > bestRate) {
+          bestRate = rm.rewardsDailyRate;
+          bestTitle = rm.question || pos.market_title || "";
+        }
+      }
+
+      // Update reward_daily_rate and reward_market_title from public data
+      // (reward_scoring and reward_earnings_today come from agent report parsing)
+      await pool.query(
+        `UPDATE experts SET
+          reward_daily_rate = $1,
+          reward_market_title = $2,
+          updated_at = NOW()
+        WHERE id = $3`,
+        [bestRate, bestTitle, expert.id]
+      );
+    }
+    console.log(`[sync] Reward markets: ${rewardMap.size} active, checked ${experts.rows.length} experts`);
+  } catch (err) {
+    console.error("[sync] Reward markets error:", err);
+  }
+}
+
 async function syncTrades() {
   const experts = await pool.query(
     "SELECT id, wallet_address FROM experts WHERE wallet_address IS NOT NULL"
@@ -193,14 +256,18 @@ async function takeSnapshots() {
   }
 }
 
-function parseReport(output: string, expertName: string): {
+interface ParsedReport {
   summary: string;
   tradesMade: string;
   positionsHeld: string;
   positionsExited: string;
   nextMoves: string;
   rawReport: string;
-} | null {
+  rewardScoring?: boolean;
+  rewardEarningsToday?: number;
+}
+
+function parseReport(output: string, expertName: string): ParsedReport | null {
   const startMarker = `=== ${expertName} REPORT ===`;
   const endMarker = `=== END REPORT ===`;
   const startIdx = output.indexOf(startMarker);
@@ -215,6 +282,20 @@ function parseReport(output: string, expertName: string): {
     return match ? match[1].trim() : "";
   };
 
+  // Parse LP-specific reward fields
+  const rewardStatusRaw = extract("REWARD STATUS");
+  let rewardScoring: boolean | undefined;
+  if (rewardStatusRaw) {
+    rewardScoring = /scoring/i.test(rewardStatusRaw) && !/not scoring/i.test(rewardStatusRaw);
+  }
+
+  const earningsRaw = extract("EARNINGS");
+  let rewardEarningsToday: number | undefined;
+  if (earningsRaw) {
+    const match = earningsRaw.match(/\$?([\d.]+)/);
+    if (match) rewardEarningsToday = parseFloat(match[1]);
+  }
+
   // Works for both directional and LP report formats
   return {
     summary: extract("RESEARCH"),
@@ -223,6 +304,8 @@ function parseReport(output: string, expertName: string): {
     positionsExited: extract("POSITIONS EXITED") || extract("OPEN ORDERS"),
     nextMoves: extract("NEXT MOVES"),
     rawReport: report,
+    rewardScoring,
+    rewardEarningsToday,
   };
 }
 
@@ -282,6 +365,18 @@ async function syncResearchLogs() {
           new Date(log.executed_at),
         ]
       );
+
+      // Update reward fields on expert if this is an LP report with reward data
+      if (parsed.rewardScoring !== undefined) {
+        await pool.query(
+          `UPDATE experts SET
+            reward_scoring = $1,
+            reward_earnings_today = COALESCE($2, reward_earnings_today),
+            updated_at = NOW()
+          WHERE id = $3`,
+          [parsed.rewardScoring, parsed.rewardEarningsToday ?? null, expertId]
+        );
+      }
     }
   } catch (err) {
     console.error("[sync] Research logs error:", err);
@@ -295,6 +390,7 @@ export async function runSync() {
   try {
     await syncBalances();
     await syncPositions();
+    await syncRewardMarkets();
     await syncTrades();
     await syncResearchLogs();
     await takeSnapshots();

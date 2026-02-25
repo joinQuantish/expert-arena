@@ -261,8 +261,8 @@ Market selection: Target zero-competition markets. You can afford wider spreads 
 because you're the only LP — you'll still capture the full reward pool.
 Wider spread = fewer fills = less inventory to manage. This is ideal for your rebalancing style.
 Every session: check get_positions FIRST. If holding inventory:
-  - Both YES+NO: merge_tokens immediately. If merge fails once, skip and report.
-  - One side only: sell it via market order if < $3 value. For larger amounts, skew next quote.
+  - Both YES+NO: merge_tokens immediately. If merge fails twice, sell both sides at market.
+  - One side only: sell ALL at market price. Don't hold inventory. Recover USDC and redeploy fresh.
 NEVER deploy with spread < 2 cents. Your old 1-cent spread got both sides filled instantly.
 Minimum spread: 3 cents for you. Safety over Q-score.`,
   },
@@ -370,10 +370,13 @@ You run every 1 hour. Your capital is $24 — you work 1 market at a time (~$19 
    - ONLY intervene if: orders NOT scoring, one side fully filled, or spread drifted past max_spread.
    - Then end your session. Report status and exit.
 
-3. IF YOU HAVE INVENTORY (YES or NO tokens) BUT NO SCORING ORDERS
+3. IF YOU HAVE INVENTORY (YES or NO tokens) BUT NO SCORING ORDERS → CLEAR IT
    - If you hold BOTH YES and NO tokens on the same conditionId: call merge_tokens to recover USDC.
-   - If merge fails or you only hold one side: you'll need to sell the inventory or deploy around it.
-   - After merging/clearing inventory, proceed to step 4.
+     If merge fails, try once more. If it fails again, skip merge and sell both sides at market instead.
+   - If you hold only ONE side (just YES or just NO): sell it ALL at market price immediately.
+     Do not try to be clever with skewed quotes. Just sell, recover the USDC, and start fresh.
+     A small loss on the sell is worth it — your goal is earning rewards, not holding inventory.
+   - After clearing inventory, proceed to step 4 to redeploy on a (potentially different) market.
 
 4. IF YOU HAVE $19+ USDC AND NO ACTIVE DEPLOYMENT → FIND A MARKET
    - Call get_reward_markets to see all active reward markets.

@@ -141,27 +141,44 @@ async function syncPositions() {
   }
 }
 
-interface RewardMarket {
-  conditionId: string;
-  rewardsDailyRate: number;
-  maxSpread: number;
-  minSize: number;
+interface RewardMarketRaw {
+  condition_id: string;
+  total_daily_rate: number;
+  rewards_max_spread: number;
+  rewards_min_size: number;
   question?: string;
+}
+
+interface RewardMarketsPaginated {
+  data: RewardMarketRaw[];
+  next_cursor?: string;
+  count: number;
 }
 
 async function syncRewardMarkets() {
   try {
-    const res = await fetch(`${CLOB_API}/rewards/markets/current`);
-    if (!res.ok) {
-      console.error(`[sync] Reward markets fetch failed: ${res.status}`);
-      return;
+    // Fetch all pages of reward markets
+    const allMarkets: RewardMarketRaw[] = [];
+    let cursor: string | undefined;
+    for (let page = 0; page < 10; page++) {
+      const url = cursor
+        ? `${CLOB_API}/rewards/markets/current?next_cursor=${cursor}`
+        : `${CLOB_API}/rewards/markets/current`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        console.error(`[sync] Reward markets fetch failed: ${res.status}`);
+        return;
+      }
+      const body: RewardMarketsPaginated = await res.json();
+      allMarkets.push(...body.data);
+      if (!body.next_cursor) break;
+      cursor = body.next_cursor;
     }
-    const rewardMarkets: RewardMarket[] = await res.json();
 
     // Build lookup: conditionId → reward data
-    const rewardMap = new Map<string, RewardMarket>();
-    for (const rm of rewardMarkets) {
-      rewardMap.set(rm.conditionId, rm);
+    const rewardMap = new Map<string, RewardMarketRaw>();
+    for (const rm of allMarkets) {
+      rewardMap.set(rm.condition_id, rm);
     }
 
     // For each expert, check if any of their positions are on reward markets
@@ -180,8 +197,8 @@ async function syncRewardMarkets() {
 
       for (const pos of positions.rows) {
         const rm = rewardMap.get(pos.condition_id);
-        if (rm && rm.rewardsDailyRate > bestRate) {
-          bestRate = rm.rewardsDailyRate;
+        if (rm && rm.total_daily_rate > bestRate) {
+          bestRate = rm.total_daily_rate;
           bestTitle = rm.question || pos.market_title || "";
         }
       }

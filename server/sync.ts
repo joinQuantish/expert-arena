@@ -164,9 +164,12 @@ async function syncRewardMarkets() {
       const url = cursor
         ? `${CLOB_API}/rewards/markets/current?next_cursor=${cursor}`
         : `${CLOB_API}/rewards/markets/current`;
-      const res = await fetch(url);
+      const res = await fetch(url, {
+        headers: { "Accept": "application/json" },
+      });
       if (!res.ok) {
-        console.error(`[sync] Reward markets fetch failed: ${res.status}`);
+        const errBody = await res.text().catch(() => "");
+        console.error(`[sync] Reward markets fetch failed: ${res.status} ${errBody.slice(0, 200)}`);
         return;
       }
       const body: RewardMarketsPaginated = await res.json();

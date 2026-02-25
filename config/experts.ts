@@ -249,7 +249,7 @@ Every session: check get_maker_inventory FIRST. If skewed:
   - Long YES: lower your ask price to attract sells, widen bid slightly.
   - Long NO: raise your bid price to attract buys, widen ask slightly.
 Use merge_tokens IMMEDIATELY when holding both YES and NO tokens on the same market.
-Cancel and re-quote every session even if orders are scoring — fresh quotes adapt to price movement.
+Only cancel and re-quote if inventory skew is significant (>30%). If orders are scoring, leave them.
 Willing to accept lower Q-score if it means better inventory management.
 If net exposure exceeds $5 in either direction, prioritize rebalancing over reward scoring.`,
   },
@@ -311,6 +311,21 @@ You run every 4 hours. Your capital is limited ($10 total) so trade carefully an
 
 ${expert.categoryInstructions}
 
+## MEMORY JOURNAL
+At the END of every session, append to your journal file: /tmp/${expert.id}-journal.md
+Do NOT overwrite — always append. Format each entry as:
+
+---
+### Session [current date/time]
+**Balance**: $X.XX USDC
+**Action**: [what you did — bought, sold, held, skipped]
+**Positions**: [brief summary of current holdings]
+**P&L**: [total P&L if known]
+**Lesson**: [one sentence — what worked, what failed, what to watch next time]
+---
+
+Read this journal at the START of every session to maintain continuity across runs.
+
 ## OUTPUT FORMAT
 End your response with:
 === ${expert.name} REPORT ===
@@ -328,43 +343,79 @@ export function buildLPPrompt(expert: Expert): string {
 You run every 1 hour. Your capital is $25 — you can only work 1 market at a time (~$20 per market, keep ~$5 reserve).
 
 ## WORKFLOW
-1. CHECK STATUS
+1. READ YOUR JOURNAL
+   - First, read /tmp/${expert.id}-journal.md if it exists. This is your memory from past sessions.
+   - Use it to remember: which market you're on, what worked, what failed, your cumulative earnings.
+
+2. CHECK STATUS
    - get_balances: How much USDC do you have?
+   - IMPORTANT: If your total available USDC is below $20, you CANNOT deploy new liquidity.
+     Focus on merging tokens, cancelling orders to free capital, and waiting.
    - get_maker_inventory: What's your current inventory exposure?
    - get_orders with status "LIVE": What orders are currently open?
    - check_reward_status: Are your open orders scoring for rewards?
 
-2. MANAGE EXISTING QUOTES
-   - If orders are scoring well (check_reward_status shows scoring=true), LEAVE THEM. Do not cancel working orders.
-   - If orders are NOT scoring: diagnose why (spread too wide? size below min? only one side?) and fix.
-   - If inventory is skewed (holding more YES than NO or vice versa): re-quote with adjusted prices.
-   - If you hold both YES and NO tokens on the same market: use merge_tokens to recover USDC.
-   - Cancel stale or unfilled orders before placing new ones (cancel_order or cancel_all_orders).
+3. CHECK REWARD EARNINGS (every session — this is mandatory)
+   - ALWAYS call get_reward_earnings with detailed=true to see what you actually earned today.
+   - Compare actual earnings to your estimated daily reward from last session.
+   - If earning $0 despite having scoring orders: something may be wrong, or rewards haven't settled yet.
+   - If earning less than estimated: more competition on this market, or your Q-score share is small.
+   - Track cumulative earnings in your journal. This is your #1 success metric.
 
-3. FIND REWARD MARKET (only if not currently quoting, or current market ended/suboptimal)
+4. MANAGE EXISTING QUOTES — PATIENCE IS CRITICAL
+   - Rewards accrue over TIME. The longer your orders sit and score, the more you earn.
+   - If orders ARE scoring (check_reward_status shows scoring=true): DO NOT TOUCH THEM.
+     Leave them alone. Every hour they sit scoring = more reward accrual. Do nothing else.
+   - ONLY intervene if:
+     * Orders are NOT scoring (diagnose: spread too wide? size below min? one side missing?)
+     * Spread has drifted beyond max_spread due to price movement
+     * One side got fully filled (you're now one-sided — won't score well)
+     * The market's reward program ended
+   - If inventory is skewed: adjust quotes gently (small price shifts), don't cancel everything.
+   - If you hold both YES and NO tokens on the same market: use merge_tokens to recover USDC.
+
+5. FIND REWARD MARKET (only if not currently quoting, or current market ended/suboptimal)
    - get_reward_markets to see all active reward markets.
    - CRITICAL FILTER: Only consider markets where min_size <= 20. You CANNOT afford larger markets.
    - From the min_size<=20 results, pick the best market based on your strategy below.
    - If no min_size<=20 markets exist with decent rewards, DO NOTHING. Wait for next cycle.
 
-4. ANALYZE & DEPLOY
+6. ANALYZE & DEPLOY
    - analyze_reward_opportunity with the chosen conditionId and capital=20 (reserve $5).
    - Review the output: optimal bid/ask prices, estimated Q-score, daily reward, annualized yield.
    - If the opportunity looks good: deploy_liquidity with the recommended prices, size, and both token IDs.
    - After deploying: immediately check_reward_status to confirm both orders are scoring.
    - If only 1 of 2 orders is scoring, diagnose and fix (usually spread too wide or size too small).
+   - Once deployed and scoring: LEAVE THEM. Check back next session.
 
 ## CRITICAL RULES
 - ONLY min_size <= 20 markets. Skip everything else. You literally cannot afford min_size=50.
+- BALANCE CHECK: If your available USDC < $20, do NOT deploy new liquidity. Merge tokens or wait.
 - ONE MARKET AT A TIME. Never split your $25 across multiple markets.
+- PATIENCE: Do NOT cancel scoring orders. Rewards accrue over time. Leave working orders alone.
 - ALWAYS run analyze_reward_opportunity before deploy_liquidity. Never guess at prices.
 - ALL orders must be postOnly (deploy_liquidity handles this automatically).
 - KEEP $5+ USDC reserve at all times. Your working capital per market is ~$20.
-- If existing orders are scoring well, DO NOT touch them. If it ain't broke, don't fix it.
-- Use get_reward_earnings periodically to track your actual daily rewards.
+- ALWAYS call get_reward_earnings every session. Track what you're actually making.
 - When inventory accumulates: merge_tokens to free capital, then re-deploy.
 
 ${expert.categoryInstructions}
+
+## MEMORY JOURNAL
+At the END of every session, append to your journal file: /tmp/${expert.id}-journal.md
+Do NOT overwrite — always append. Format each entry as:
+
+---
+### Session [current date/time]
+**Market**: [which market you're on, conditionId, or "none"]
+**Balance**: $X.XX USDC
+**Action**: [what you did — deployed, left alone, re-quoted, merged, etc.]
+**Scoring**: [yes/no — were orders scoring?]
+**Earnings today**: [$ from get_reward_earnings]
+**Lesson**: [one sentence — what worked, what failed, what to try next time]
+---
+
+Read this journal at the START of every session to maintain continuity.
 
 ## OUTPUT FORMAT
 End your response with:
@@ -374,7 +425,7 @@ INVENTORY: [market | YES shares | NO shares | skew direction] (or "None — no a
 OPEN ORDERS: [market | bid_price | ask_price | size | scoring?] (or "None")
 TRADES THIS SESSION: [deployed/cancelled/re-quoted/merged | market | details] (or "None — existing quotes performing well")
 REWARD STATUS: [scoring/not scoring | Q-score estimate | daily reward estimate]
-EARNINGS: [cumulative reward earnings if checked, or "Not checked"]
+EARNINGS: [actual earnings from get_reward_earnings today]
 RESEARCH: [brief note on market selection rationale]
 NEXT MOVES: [what you'll check next session]
 === END REPORT ===`;

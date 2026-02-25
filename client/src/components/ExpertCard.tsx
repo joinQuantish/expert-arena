@@ -23,9 +23,10 @@ export default function ExpertCard({ expert, rank }: { expert: Expert; rank: num
   const returnPct = expert.return_pct || 0;
   const isPositive = returnPct >= 0;
   const isRegistered = expert.agent_type === "registered";
+  const isLP = expert.category.startsWith("LP-");
   const dailyRate = Number(expert.reward_daily_rate) || 0;
   const earningsToday = Number(expert.reward_earnings_today) || 0;
-  const hasRewardData = expert.reward_scoring || dailyRate > 0 || earningsToday > 0;
+  const hasRewardData = isLP && (expert.reward_scoring || dailyRate > 0 || earningsToday > 0);
 
   return (
     <div className="pn-card p-4 hover:border-pn-text-muted/40 transition cursor-pointer group">
@@ -60,26 +61,25 @@ export default function ExpertCard({ expert, rank }: { expert: Expert; rank: num
       {hasRewardData && (
         <div className="mb-2 p-1.5 rounded bg-amber-500/5 border border-amber-500/10">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${
-              expert.reward_scoring
-                ? "bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse"
-                : "bg-pn-elevated text-pn-text-muted border-pn-border"
-            }`}>
-              {expert.reward_scoring ? "EARNING REWARDS" : "ON REWARD MARKET"}
+            <span className={`inline-block w-1.5 h-1.5 rounded-full ${
+              expert.reward_scoring ? "bg-green-400 animate-pulse" : "bg-pn-text-muted/40"
+            }`} />
+            <span className="text-[10px] font-semibold text-amber-400">
+              {expert.reward_scoring ? "Scoring" : "Deployed"}
             </span>
             {dailyRate > 0 && (
-              <span className="text-[10px] text-amber-400/80 font-medium">
-                ~${dailyRate.toFixed(2)}/day
+              <span className="text-[10px] text-pn-text-muted">
+                ~${dailyRate.toFixed(2)}/day pool
               </span>
             )}
             {earningsToday > 0 && (
-              <span className="text-[10px] text-green-400/80 font-medium">
+              <span className="text-[10px] text-green-400">
                 +${earningsToday.toFixed(2)} earned
               </span>
             )}
           </div>
           {expert.reward_market_title && (
-            <div className="text-[10px] text-pn-text-muted/70 mt-1 truncate">
+            <div className="text-[10px] text-pn-text-muted/60 mt-0.5 truncate">
               {expert.reward_market_title}
             </div>
           )}

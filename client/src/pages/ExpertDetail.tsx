@@ -150,9 +150,10 @@ export default function ExpertDetail() {
         )}
 
         {(() => {
+          const isLP = expert.category.startsWith("LP-");
           const dRate = Number(expert.reward_daily_rate) || 0;
           const dEarned = Number(expert.reward_earnings_today) || 0;
-          const hasReward = expert.reward_scoring || dRate > 0 || dEarned > 0;
+          const hasReward = isLP && (expert.reward_scoring || dRate > 0 || dEarned > 0);
           if (!hasReward) return null;
           return (
             <div className="mt-4 p-3 rounded-lg bg-amber-500/5 border border-amber-500/15">

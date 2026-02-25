@@ -173,9 +173,9 @@ async function syncRewardMarkets() {
       rewardMap.set(rm.condition_id, rm);
     }
 
-    // For each expert, check if any of their positions are on reward markets
+    // Only cross-reference LP agents — directional agents hold positions but don't earn rewards
     const experts = await pool.query(
-      "SELECT id FROM experts WHERE wallet_address IS NOT NULL"
+      "SELECT id FROM experts WHERE wallet_address IS NOT NULL AND category LIKE 'LP-%'"
     );
 
     for (const expert of experts.rows) {
@@ -206,7 +206,13 @@ async function syncRewardMarkets() {
         [bestRate, bestTitle, expert.id]
       );
     }
-    console.log(`[sync] Reward markets: ${rewardMap.size} active, checked ${experts.rows.length} experts`);
+    // Clear stale reward data from non-LP agents
+    await pool.query(
+      `UPDATE experts SET reward_daily_rate = 0, reward_market_title = '', reward_scoring = false, reward_earnings_today = 0
+       WHERE category NOT LIKE 'LP-%' AND (reward_daily_rate > 0 OR reward_scoring = true)`
+    );
+
+    console.log(`[sync] Reward markets: ${rewardMap.size} active, checked ${experts.rows.length} LP agents`);
   } catch (err) {
     console.error("[sync] Reward markets error:", err);
   }

@@ -388,16 +388,40 @@ You run every 1 hour. Your capital is $25 — you can only work 1 market at a ti
    - If only 1 of 2 orders is scoring, diagnose and fix (usually spread too wide or size too small).
    - Once deployed and scoring: LEAVE THEM. Check back next session.
 
+## AVOIDING FILLS — THIS IS KEY
+Your goal is to earn the spread reward WITHOUT getting filled. Every fill = inventory risk.
+- Place orders AWAY from the current price. You want to be within max_spread for scoring
+  but NOT at the top of the book where you'll get hit immediately.
+- Ideal positioning: just inside max_spread, but behind any existing liquidity at the top of book.
+- Check get_orderbook before deploying. If there's heavy volume at 0.48 bid, place yours at 0.47.
+  You still score for rewards (within max_spread) but you're less likely to get filled.
+- If one side IS getting filled repeatedly: widen that side's price (move it further from mid).
+  A slightly lower Q-score is better than constant inventory buildup.
+- If you get filled on one side: you now have inventory. Use merge_tokens if you hold both sides.
+  If only one side, gently skew your re-quote to reduce exposure on next deploy.
+- MONITOR: If your positions keep growing (inventory accumulating), your prices are too aggressive.
+  Back off. The reward comes from QUOTING, not from TRADING.
+
+## REBALANCING
+When inventory accumulates despite best efforts:
+1. First: merge_tokens if holding both YES and NO on the same market (this recovers USDC for free).
+2. If only one side: skew your next quote to attract the opposite fill. E.g., if long YES,
+   set a tighter (more attractive) ask and a wider bid.
+3. If inventory exceeds $5 in one direction and you can't rebalance via quoting:
+   consider placing a small market order to reduce exposure (only as last resort).
+4. Never let inventory consume all your capital. If USDC < $5, cancel all orders and rebalance first.
+
 ## CRITICAL RULES
 - ONLY min_size <= 20 markets. Skip everything else. You literally cannot afford min_size=50.
 - BALANCE CHECK: If your available USDC < $20, do NOT deploy new liquidity. Merge tokens or wait.
 - ONE MARKET AT A TIME. Never split your $25 across multiple markets.
 - PATIENCE: Do NOT cancel scoring orders. Rewards accrue over time. Leave working orders alone.
+- AVOID FILLS: Place orders within max_spread but NOT at top of book. Earn rewards, not fills.
 - ALWAYS run analyze_reward_opportunity before deploy_liquidity. Never guess at prices.
 - ALL orders must be postOnly (deploy_liquidity handles this automatically).
 - KEEP $5+ USDC reserve at all times. Your working capital per market is ~$20.
 - ALWAYS call get_reward_earnings every session. Track what you're actually making.
-- When inventory accumulates: merge_tokens to free capital, then re-deploy.
+- When inventory accumulates: merge_tokens first, then skew quotes, market order as last resort.
 
 ${expert.categoryInstructions}
 

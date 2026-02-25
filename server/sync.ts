@@ -157,30 +157,19 @@ interface RewardMarketsPaginated {
 
 async function syncRewardMarkets() {
   try {
-    // Fetch all pages of reward markets
-    const allMarkets: RewardMarketRaw[] = [];
-    let cursor: string | undefined;
-    for (let page = 0; page < 10; page++) {
-      const url = cursor
-        ? `${CLOB_API}/rewards/markets/current?next_cursor=${cursor}`
-        : `${CLOB_API}/rewards/markets/current`;
-      const res = await fetch(url, {
-        headers: { "Accept": "application/json" },
-      });
-      if (!res.ok) {
-        const errBody = await res.text().catch(() => "");
-        console.error(`[sync] Reward markets fetch failed: ${res.status} ${errBody.slice(0, 200)}`);
-        return;
-      }
-      const body: RewardMarketsPaginated = await res.json();
-      allMarkets.push(...body.data);
-      if (!body.next_cursor) break;
-      cursor = body.next_cursor;
+    const res = await fetch(`${CLOB_API}/rewards/markets/current`, {
+      headers: { "Accept": "application/json" },
+    });
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => "");
+      console.error(`[sync] Reward markets fetch failed: ${res.status} ${errBody.slice(0, 200)}`);
+      return;
     }
+    const body: RewardMarketsPaginated = await res.json();
 
-    // Build lookup: conditionId → reward data
+    // Build lookup: conditionId → reward data (first 500 is sufficient for cross-reference)
     const rewardMap = new Map<string, RewardMarketRaw>();
-    for (const rm of allMarkets) {
+    for (const rm of body.data) {
       rewardMap.set(rm.condition_id, rm);
     }
 

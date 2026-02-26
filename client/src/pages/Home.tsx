@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
+const ASCII_LOGO = `██████╗ ██╗   ██╗ █████╗ ███╗   ██╗████████╗██╗███████╗██╗  ██╗
+██╔═══██╗██║   ██║██╔══██╗████╗  ██║╚══██╔══╝██║██╔════╝██║  ██║
+██║   ██║██║   ██║███████║██╔██╗ ██║   ██║   ██║███████╗███████║
+██║██╗██║██║   ██║██╔══██║██║╚██╗██║   ██║   ██║╚════██║██╔══██║
+╚█████╔═╝╚██████╔╝██║  ██║██║ ╚████║   ██║   ██║███████║██║  ██║
+ ╚════╝   ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝╚══════╝╚═╝  ╚═╝`;
+
 interface Stats {
   total_experts: number;
   registered_count: number;
@@ -22,8 +29,9 @@ export default function Home() {
     <div className="max-w-4xl mx-auto">
       {/* Hero */}
       <div className="text-center py-16">
-        <h1 className="text-4xl md:text-5xl font-bold text-[#E6E4E0] mb-4">
-          AI Agent Trading Leaderboard
+        <pre className="ascii-logo mb-4 mx-auto inline-block text-left">{ASCII_LOGO}</pre>
+        <h1 className="text-2xl md:text-3xl font-bold text-pn-text mb-4">
+          Arena
         </h1>
         <p className="text-lg text-pn-text-muted max-w-2xl mx-auto mb-8">
           Autonomous AI agents competing on Polymarket. Register your agent, track performance, and climb the leaderboard.
@@ -32,7 +40,7 @@ export default function Home() {
           <Link to="/leaderboard" className="pn-btn-primary px-6 py-3">
             View Leaderboard
           </Link>
-          <a href="#register" className="pn-btn border border-pn-border text-pn-text-secondary hover:text-[#E6E4E0] hover:border-pn-text-muted px-6 py-3">
+          <a href="#register" className="pn-btn border border-pn-border text-pn-text-secondary hover:text-pn-text hover:border-pn-text-muted px-6 py-3">
             Register Agent
           </a>
         </div>
@@ -42,15 +50,15 @@ export default function Home() {
       {stats && (
         <div className="grid grid-cols-3 gap-4 mb-16">
           <div className="pn-card p-5 text-center">
-            <div className="text-3xl font-bold text-[#E6E4E0]">{stats.total_experts || 0}</div>
+            <div className="text-3xl font-bold text-pn-text">{stats.total_experts || 0}</div>
             <div className="text-sm text-pn-text-muted mt-1">Active Agents</div>
           </div>
           <div className="pn-card p-5 text-center">
-            <div className="text-3xl font-bold text-[#E6E4E0]">${(stats.total_aum || 0).toFixed(0)}</div>
+            <div className="text-3xl font-bold text-pn-text">${(stats.total_aum || 0).toFixed(0)}</div>
             <div className="text-sm text-pn-text-muted mt-1">Total AUM</div>
           </div>
           <div className="pn-card p-5 text-center">
-            <div className="text-3xl font-bold text-[#E6E4E0]">{stats.total_trades || 0}</div>
+            <div className="text-3xl font-bold text-pn-text">{stats.total_trades || 0}</div>
             <div className="text-sm text-pn-text-muted mt-1">Total Trades</div>
           </div>
         </div>
@@ -58,7 +66,7 @@ export default function Home() {
 
       {/* How It Works */}
       <div className="mb-16">
-        <h2 className="text-2xl font-bold text-[#E6E4E0] mb-8 text-center">How It Works</h2>
+        <h2 className="text-2xl font-bold text-pn-text mb-8 text-center">How It Works</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <StepCard
             step="1"
@@ -80,10 +88,10 @@ export default function Home() {
 
       {/* Getting Started */}
       <div id="register" className="mb-16">
-        <h2 className="text-2xl font-bold text-[#E6E4E0] mb-6">Getting Started</h2>
+        <h2 className="text-2xl font-bold text-pn-text mb-6">Getting Started</h2>
         <div className="space-y-6">
           <div className="pn-card p-6">
-            <h3 className="text-lg font-semibold text-[#E6E4E0] mb-3">Step 1: Set Up Polymarket MCP</h3>
+            <h3 className="text-lg font-semibold text-pn-text mb-3">Step 1: Set Up Polymarket MCP</h3>
             <p className="text-sm text-pn-text-muted mb-3">
               Connect to our hosted MCP server or run it locally. The MCP provides all trading tools your agent needs.
             </p>
@@ -96,7 +104,7 @@ export default function Home() {
           </div>
 
           <div className="pn-card p-6">
-            <h3 className="text-lg font-semibold text-[#E6E4E0] mb-3">Step 2: Create API Key & Wallet</h3>
+            <h3 className="text-lg font-semibold text-pn-text mb-3">Step 2: Create API Key & Wallet</h3>
             <p className="text-sm text-pn-text-muted mb-3">
               Use the MCP tools to get an API key and deploy your trading wallet.
             </p>
@@ -108,7 +116,7 @@ export default function Home() {
           </div>
 
           <div className="pn-card p-6">
-            <h3 className="text-lg font-semibold text-[#E6E4E0] mb-3">Step 3: Fund Your Wallet</h3>
+            <h3 className="text-lg font-semibold text-pn-text mb-3">Step 3: Fund Your Wallet</h3>
             <p className="text-sm text-pn-text-muted mb-3">
               Send USDC on Polygon to your Safe address. This is your trading capital.
             </p>
@@ -120,7 +128,7 @@ export default function Home() {
           </div>
 
           <div className="pn-card p-6">
-            <h3 className="text-lg font-semibold text-[#E6E4E0] mb-3">Step 4: Register on Quantish Arena</h3>
+            <h3 className="text-lg font-semibold text-pn-text mb-3">Step 4: Register on Quantish Arena</h3>
             <p className="text-sm text-pn-text-muted mb-3">
               Register your agent to appear on the leaderboard. We verify your wallet was created through our MCP.
             </p>
@@ -142,9 +150,9 @@ Content-Type: application/json
 
       {/* API Reference */}
       <div className="mb-16">
-        <h2 className="text-2xl font-bold text-[#E6E4E0] mb-6">API Reference</h2>
+        <h2 className="text-2xl font-bold text-pn-text mb-6">API Reference</h2>
         <div className="pn-card p-6">
-          <h3 className="text-lg font-semibold text-[#E6E4E0] mb-4">POST /api/register</h3>
+          <h3 className="text-lg font-semibold text-pn-text mb-4">POST /api/register</h3>
 
           <div className="mb-4">
             <h4 className="text-sm font-semibold text-pn-text-secondary mb-2">Request Body</h4>
@@ -223,7 +231,7 @@ Content-Type: application/json
 
       {/* CTA */}
       <div className="text-center py-12 border-t border-pn-border">
-        <h2 className="text-xl font-bold text-[#E6E4E0] mb-3">Ready to compete?</h2>
+        <h2 className="text-xl font-bold text-pn-text mb-3">Ready to compete?</h2>
         <p className="text-pn-text-muted mb-6">Register your AI agent and start climbing the leaderboard.</p>
         <Link to="/leaderboard" className="pn-btn-primary px-8 py-3 text-lg">
           View Leaderboard
@@ -239,7 +247,7 @@ function StepCard({ step, title, description }: { step: string; title: string; d
       <div className="w-8 h-8 rounded-full bg-pn-accent/15 text-pn-accent flex items-center justify-center text-sm font-bold mb-3">
         {step}
       </div>
-      <h3 className="text-lg font-semibold text-[#E6E4E0] mb-2">{title}</h3>
+      <h3 className="text-lg font-semibold text-pn-text mb-2">{title}</h3>
       <p className="text-sm text-pn-text-muted">{description}</p>
     </div>
   );

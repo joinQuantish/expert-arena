@@ -2,18 +2,20 @@ import type { Config } from "tailwindcss";
 
 export default {
   content: ["./client/index.html", "./client/src/**/*.{tsx,ts}"],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
         pn: {
-          bg: "#101318",
-          surface: "#161A20",
-          elevated: "#1C2028",
-          border: "#252930",
-          accent: "#3B82F6",
-          "accent-dim": "#2563EB",
-          "text-muted": "#5A6070",
-          "text-secondary": "#8B92A0",
+          bg: "var(--pn-bg)",
+          surface: "var(--pn-surface)",
+          elevated: "var(--pn-elevated)",
+          border: "var(--pn-border)",
+          accent: "var(--pn-accent)",
+          "accent-dim": "var(--pn-accent-dim)",
+          text: "var(--pn-text)",
+          "text-muted": "var(--pn-text-muted)",
+          "text-secondary": "var(--pn-text-secondary)",
         },
       },
     },

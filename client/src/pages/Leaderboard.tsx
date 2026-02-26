@@ -112,7 +112,7 @@ function StatCard({ label, value, color }: { label: string; value: string; color
   return (
     <div className="pn-card p-4">
       <div className="text-xs text-pn-text-muted uppercase tracking-wider">{label}</div>
-      <div className={`text-xl font-bold mt-1 ${color || "text-[#E6E4E0]"}`}>{value}</div>
+      <div className={`text-xl font-bold mt-1 ${color || "text-pn-text"}`}>{value}</div>
     </div>
   );
 }

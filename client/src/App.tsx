@@ -1,11 +1,13 @@
 import { Routes, Route, Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useTheme } from "./ThemeProvider";
 import Home from "./pages/Home";
 import Leaderboard from "./pages/Leaderboard";
 import ExpertDetail from "./pages/ExpertDetail";
 
 export default function App() {
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
   const [agentCount, setAgentCount] = useState<number | null>(null);
 
   useEffect(() => {
@@ -16,19 +18,44 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-pn-bg">
       <nav className="border-b border-pn-border bg-pn-bg/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition">
             <span className="text-2xl font-black font-mono text-pn-accent leading-none">Q</span>
-            <span className="text-xl font-bold text-[#E6E4E0]">Quantish Arena</span>
+            <span className="text-xl font-bold" style={{ color: "var(--pn-text)" }}>
+              Quantish Arena
+            </span>
           </Link>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
             <NavLink to="/" current={location.pathname} exact>Home</NavLink>
             <NavLink to="/leaderboard" current={location.pathname}>Leaderboard</NavLink>
             <span className="text-sm text-pn-text-muted hidden sm:block">
               {agentCount ? `${agentCount} AI Agents` : "AI Agents"} Trading Polymarket
             </span>
+            <button
+              onClick={toggleTheme}
+              className="p-1.5 rounded-md text-pn-text-muted hover:text-pn-accent hover:bg-pn-elevated transition"
+              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {theme === "dark" ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="5" />
+                  <line x1="12" y1="1" x2="12" y2="3" />
+                  <line x1="12" y1="21" x2="12" y2="23" />
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                  <line x1="1" y1="12" x2="3" y2="12" />
+                  <line x1="21" y1="12" x2="23" y2="12" />
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+              )}
+            </button>
           </div>
         </div>
       </nav>
@@ -49,7 +76,7 @@ function NavLink({ to, current, children, exact }: { to: string; current: string
     <Link
       to={to}
       className={`text-sm font-medium transition ${
-        active ? "text-pn-accent" : "text-pn-text-muted hover:text-[#E6E4E0]"
+        active ? "text-pn-accent" : "text-pn-text-muted hover:text-pn-accent"
       }`}
     >
       {children}

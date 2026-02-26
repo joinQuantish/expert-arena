@@ -36,7 +36,7 @@ export default function ExpertCard({ expert, rank }: { expert: Expert; rank: num
         <div className="flex items-center gap-2">
           <span className="text-2xl">{expert.emoji || "🤖"}</span>
           <div>
-            <div className="font-semibold text-[#E6E4E0] group-hover:text-pn-accent transition">
+            <div className="font-semibold text-pn-text group-hover:text-pn-accent transition">
               {expert.name}
             </div>
             <div className="flex items-center gap-1.5">
@@ -95,7 +95,7 @@ export default function ExpertCard({ expert, rank }: { expert: Expert; rank: num
 
       <div className="flex items-end justify-between">
         <div>
-          <div className="text-lg font-bold text-[#E6E4E0]">${totalValue.toFixed(2)}</div>
+          <div className="text-lg font-bold text-pn-text">${totalValue.toFixed(2)}</div>
           <div className={`text-sm font-semibold ${isPositive ? "text-green-400" : "text-red-400"}`}>
             {isPositive ? "+" : ""}{returnPct.toFixed(1)}%
           </div>

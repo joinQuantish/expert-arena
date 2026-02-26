@@ -124,7 +124,7 @@ export default function ExpertDetail() {
             <div className="flex items-center gap-3">
               <span className="text-3xl">{expert.emoji || "🤖"}</span>
               <div>
-                <h1 className="text-2xl font-bold text-[#E6E4E0]">{expert.name}</h1>
+                <h1 className="text-2xl font-bold text-pn-text">{expert.name}</h1>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-sm px-2 py-0.5 rounded bg-pn-elevated text-pn-text-muted">
                     {expert.category}
@@ -155,7 +155,7 @@ export default function ExpertDetail() {
             )}
           </div>
           <div className="text-right">
-            <div className="text-2xl font-bold text-[#E6E4E0]">${totalValue.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-pn-text">${totalValue.toFixed(2)}</div>
             <div className={`text-sm font-semibold ${returnPct >= 0 ? "text-green-400" : "text-red-400"}`}>
               {returnPct >= 0 ? "+" : ""}{returnPct.toFixed(1)}% return
             </div>
@@ -223,18 +223,18 @@ export default function ExpertDetail() {
                 </div>
                 <div>
                   <span className="text-pn-text-muted block">Avg/Day</span>
-                  <span className="text-[#E6E4E0] font-semibold">
+                  <span className="text-pn-text font-semibold">
                     {avgDaily > 0 ? `$${avgDaily.toFixed(4)}` : "—"}
                   </span>
                 </div>
                 <div>
                   <span className="text-pn-text-muted block">Days Active</span>
-                  <span className="text-[#E6E4E0] font-semibold">{daysActive || "—"}</span>
+                  <span className="text-pn-text font-semibold">{daysActive || "—"}</span>
                 </div>
               </div>
               {expert.reward_market_title && (
                 <div className="mt-2 text-[10px] text-pn-text-muted">
-                  Market: <span className="text-[#E6E4E0]">{expert.reward_market_title}</span>
+                  Market: <span className="text-pn-text">{expert.reward_market_title}</span>
                 </div>
               )}
             </div>
@@ -279,7 +279,7 @@ function MiniStat({ label, value, color }: { label: string; value: string; color
   return (
     <div>
       <div className="text-xs text-pn-text-muted">{label}</div>
-      <div className={`text-lg font-semibold ${color || "text-[#E6E4E0]"}`}>{value}</div>
+      <div className={`text-lg font-semibold ${color || "text-pn-text"}`}>{value}</div>
     </div>
   );
 }
@@ -318,7 +318,7 @@ function RewardsTab({
       {rewardDays.map((day) => (
         <div key={day.date} className="pn-card p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold text-[#E6E4E0]">
+            <span className="text-sm font-semibold text-pn-text">
               {new Date(day.date).toLocaleDateString("en-US", {
                 weekday: "short",
                 month: "short",

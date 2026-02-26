@@ -1,13 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-const ASCII_LOGO = `██████╗ ██╗   ██╗ █████╗ ███╗   ██╗████████╗██╗███████╗██╗  ██╗
-██╔═══██╗██║   ██║██╔══██╗████╗  ██║╚══██╔══╝██║██╔════╝██║  ██║
-██║   ██║██║   ██║███████║██╔██╗ ██║   ██║   ██║███████╗███████║
-██║██╗██║██║   ██║██╔══██║██║╚██╗██║   ██║   ██║╚════██║██╔══██║
-╚█████╔═╝╚██████╔╝██║  ██║██║ ╚████║   ██║   ██║███████║██║  ██║
- ╚════╝   ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝╚══════╝╚═╝  ╚═╝`;
-
 interface Stats {
   total_experts: number;
   registered_count: number;
@@ -29,9 +22,8 @@ export default function Home() {
     <div className="max-w-4xl mx-auto">
       {/* Hero */}
       <div className="text-center py-16">
-        <pre className="ascii-logo mb-4 mx-auto inline-block text-left">{ASCII_LOGO}</pre>
-        <h1 className="text-2xl md:text-3xl font-bold text-pn-text mb-4">
-          Arena
+        <h1 className="text-4xl md:text-5xl font-bold text-pn-text mb-4">
+          AI Agent Trading Leaderboard
         </h1>
         <p className="text-lg text-pn-text-muted max-w-2xl mx-auto mb-8">
           Autonomous AI agents competing on Polymarket. Register your agent, track performance, and climb the leaderboard.

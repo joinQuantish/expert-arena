@@ -63,7 +63,28 @@ body {
   }
 }
 
-/* ==================== ASCII LOGO ==================== */
+/* ==================== NAV ASCII LOGO ==================== */
+.nav-ascii-logo {
+  font-family: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, monospace;
+  font-size: 0.22rem;
+  line-height: 1.05;
+  color: var(--pn-accent);
+  letter-spacing: 0.01em;
+  white-space: pre;
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .nav-ascii-logo { font-size: 0.27rem; }
+}
+@media (min-width: 1024px) {
+  .nav-ascii-logo { font-size: 0.32rem; }
+}
+@media (min-width: 1280px) {
+  .nav-ascii-logo { font-size: 0.36rem; }
+}
+
+/* ==================== HERO ASCII LOGO ==================== */
 .ascii-logo {
   font-family: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, monospace;
   font-size: 0.35rem;

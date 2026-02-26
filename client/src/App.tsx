@@ -5,6 +5,13 @@ import Home from "./pages/Home";
 import Leaderboard from "./pages/Leaderboard";
 import ExpertDetail from "./pages/ExpertDetail";
 
+const NAV_ASCII = `██████╗ ██╗   ██╗ █████╗ ███╗   ██╗████████╗██╗███████╗██╗  ██╗
+██╔═══██╗██║   ██║██╔══██╗████╗  ██║╚══██╔══╝██║██╔════╝██║  ██║
+██║   ██║██║   ██║███████║██╔██╗ ██║   ██║   ██║███████╗███████║
+██║██╗██║██║   ██║██╔══██║██║╚██╗██║   ██║   ██║╚════██║██╔══██║
+╚█████╔═╝╚██████╔╝██║  ██║██║ ╚████║   ██║   ██║███████║██║  ██║
+ ╚════╝   ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚═╝╚══════╝╚═╝  ╚═╝`;
+
 export default function App() {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
@@ -20,12 +27,11 @@ export default function App() {
   return (
     <div className="min-h-screen bg-pn-bg">
       <nav className="border-b border-pn-border bg-pn-bg/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition">
-            <span className="text-2xl font-black font-mono text-pn-accent leading-none">Q</span>
-            <span className="text-xl font-bold" style={{ color: "var(--pn-text)" }}>
-              Quantish Arena
-            </span>
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition">
+            <pre className="nav-ascii-logo hidden sm:block">{NAV_ASCII}</pre>
+            <span className="sm:hidden text-lg font-black font-mono text-pn-accent">QANTIS</span>
+            <span className="text-sm font-semibold text-pn-text-secondary leading-none">Arena</span>
           </Link>
           <div className="flex items-center gap-4">
             <NavLink to="/" current={location.pathname} exact>Home</NavLink>

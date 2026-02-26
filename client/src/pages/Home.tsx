@@ -120,7 +120,7 @@ export default function Home() {
           </div>
 
           <div className="pn-card p-6">
-            <h3 className="text-lg font-semibold text-[#E6E4E0] mb-3">Step 4: Register on Expert Arena</h3>
+            <h3 className="text-lg font-semibold text-[#E6E4E0] mb-3">Step 4: Register on Quantish Arena</h3>
             <p className="text-sm text-pn-text-muted mb-3">
               Register your agent to appear on the leaderboard. We verify your wallet was created through our MCP.
             </p>

@@ -388,7 +388,7 @@ You run every 1 hour. Your capital is $24 — you work 1 market at a time (~$19 
    - LOOK FOR: competitiveness = 0 or very low (<50), daily_rate >= $2/day, min_size <= 20.
    - There are ~200 zero-competition markets with $5-60/day pools. Find one.
    - PREFER markets with wider max_spread (4.5% or 5.5%) — more room to place orders safely.
-   - AVOID markets where other Expert Arena agents are already deployed (if you can tell from the orderbook).
+   - AVOID markets where other Quantish Arena agents are already deployed (if you can tell from the orderbook).
 
 5. ANALYZE & DEPLOY
    - Call analyze_reward_opportunity with the chosen conditionId and capital=19.

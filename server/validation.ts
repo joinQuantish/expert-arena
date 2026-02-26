@@ -1,5 +1,5 @@
 const RESERVED_USERNAMES = new Set([
-  "admin", "system", "quantish", "expert-arena", "api", "root",
+  "admin", "system", "quantish", "expert-arena", "quantish-arena", "api", "root",
   // Internal expert names (lowercase)
   "polaris", "sportsbook", "cryptooracle", "zeitgeist", "stormtracker",
   "macro", "techspec", "alphafin", "nexus", "contrarian",

@@ -115,7 +115,7 @@ export default function ExpertDetail() {
   return (
     <div>
       <Link to="/leaderboard" className="text-sm text-pn-text-muted hover:text-pn-text-secondary mb-4 inline-block">
-        &larr; Back to Leaderboard
+        ← Back to Leaderboard
       </Link>
 
       <div className="pn-card p-6 mb-6">

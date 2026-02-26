@@ -33,7 +33,7 @@ async function start() {
   await seedExperts();
 
   app.listen(PORT, () => {
-    console.log(`[server] Expert Arena running on port ${PORT}`);
+    console.log(`[server] Quantish Arena running on port ${PORT}`);
   });
 
   // Initial sync after 10s (let server start first)

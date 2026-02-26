@@ -146,6 +146,91 @@ router.get("/api/experts/:id/snapshots", async (req, res) => {
   }
 });
 
+// Reward earnings history for an expert
+router.get("/api/experts/:id/reward-earnings", async (req, res) => {
+  try {
+    const days = Math.min(parseInt(req.query.days as string) || 30, 90);
+    const result = await pool.query(
+      `SELECT date, SUM(earnings) as total_earnings,
+              json_agg(json_build_object(
+                'conditionId', condition_id,
+                'question', question,
+                'earnings', earnings,
+                'earningPercentage', earning_percentage,
+                'competitiveness', competitiveness
+              ) ORDER BY earnings DESC) as markets
+       FROM reward_earnings
+       WHERE expert_id = $1 AND date >= CURRENT_DATE - INTERVAL '1 day' * $2
+       GROUP BY date
+       ORDER BY date DESC`,
+      [req.params.id, days]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal error" });
+  }
+});
+
+// Cumulative reward totals for an expert
+router.get("/api/experts/:id/reward-totals", async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT
+        COALESCE(SUM(earnings), 0) as total_earnings,
+        COUNT(DISTINCT date) as days_earning,
+        COUNT(DISTINCT condition_id) as markets_deployed,
+        MIN(date) as first_earning_date,
+        MAX(date) as last_earning_date,
+        CASE WHEN COUNT(DISTINCT date) > 0
+          THEN ROUND((SUM(earnings) / COUNT(DISTINCT date))::numeric, 4)
+          ELSE 0
+        END as avg_daily_earnings
+       FROM reward_earnings
+       WHERE expert_id = $1 AND earnings > 0`,
+      [req.params.id]
+    );
+    res.json(
+      result.rows[0] || {
+        total_earnings: 0,
+        days_earning: 0,
+        markets_deployed: 0,
+        first_earning_date: null,
+        last_earning_date: null,
+        avg_daily_earnings: 0,
+      }
+    );
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal error" });
+  }
+});
+
+// Aggregate reward stats across all LP agents
+router.get("/api/rewards/summary", async (_req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        re.expert_id,
+        e.name,
+        e.emoji,
+        COALESCE(SUM(re.earnings), 0) as total_earnings,
+        COUNT(DISTINCT re.date) as days_active,
+        MAX(re.date) as last_earning_date,
+        COALESCE(SUM(CASE WHEN re.date = CURRENT_DATE THEN re.earnings ELSE 0 END), 0) as today_earnings
+      FROM reward_earnings re
+      JOIN experts e ON e.id = re.expert_id
+      WHERE re.earnings > 0
+      GROUP BY re.expert_id, e.name, e.emoji
+      ORDER BY total_earnings DESC
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal error" });
+  }
+});
+
 // Leaderboard
 router.get("/api/leaderboard", async (_req, res) => {
   try {
@@ -162,6 +247,7 @@ router.get("/api/leaderboard", async (_req, res) => {
         (SELECT COUNT(*) FROM trades t WHERE t.expert_id = e.id) as trade_count,
         e.reward_scoring, COALESCE(e.reward_daily_rate, 0) as reward_daily_rate,
         COALESCE(e.reward_earnings_today, 0) as reward_earnings_today, COALESCE(e.reward_market_title, '') as reward_market_title,
+        COALESCE((SELECT SUM(re.earnings) FROM reward_earnings re WHERE re.expert_id = e.id AND re.earnings > 0), 0) as reward_total_earnings,
         e.updated_at
       FROM experts e
       WHERE e.enabled = true

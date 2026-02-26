@@ -33,11 +33,34 @@ interface Snapshot {
   timestamp: string;
 }
 
+interface RewardDay {
+  date: string;
+  total_earnings: number;
+  markets: Array<{
+    conditionId: string;
+    question: string;
+    earnings: number;
+    earningPercentage: number;
+    competitiveness: number;
+  }>;
+}
+
+interface RewardTotals {
+  total_earnings: number;
+  days_earning: number;
+  markets_deployed: number;
+  avg_daily_earnings: number;
+  first_earning_date: string | null;
+  last_earning_date: string | null;
+}
+
 export default function ExpertDetail() {
   const { id } = useParams<{ id: string }>();
   const [expert, setExpert] = useState<Expert | null>(null);
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
-  const [tab, setTab] = useState<"positions" | "trades" | "research">("positions");
+  const [rewardDays, setRewardDays] = useState<RewardDay[]>([]);
+  const [rewardTotals, setRewardTotals] = useState<RewardTotals | null>(null);
+  const [tab, setTab] = useState<"positions" | "trades" | "rewards" | "research">("positions");
   const [loading, setLoading] = useState(true);
 
   const isRegistered = expert?.agent_type === "registered";
@@ -51,6 +74,18 @@ export default function ExpertDetail() {
       setExpert(exp);
       setSnapshots(snaps);
       setLoading(false);
+
+      // Fetch reward data for LP agents
+      if (exp.category?.startsWith("LP-")) {
+        fetch(`/api/experts/${id}/reward-earnings?days=30`)
+          .then((r) => r.json())
+          .then(setRewardDays)
+          .catch(() => {});
+        fetch(`/api/experts/${id}/reward-totals`)
+          .then((r) => r.json())
+          .then(setRewardTotals)
+          .catch(() => {});
+      }
     });
   }, [id]);
 
@@ -70,9 +105,12 @@ export default function ExpertDetail() {
     ? ((totalValue - expert.initial_balance) / expert.initial_balance) * 100
     : 0;
 
+  const isLP = expert.category.startsWith("LP-");
   const tabs = isRegistered
     ? (["positions", "trades"] as const)
-    : (["positions", "trades", "research"] as const);
+    : isLP
+      ? (["positions", "trades", "rewards", "research"] as const)
+      : (["positions", "trades", "research"] as const);
 
   return (
     <div>
@@ -150,47 +188,55 @@ export default function ExpertDetail() {
         )}
 
         {(() => {
-          const isLP = expert.category.startsWith("LP-");
+          if (!isLP) return null;
           const dRate = Number(expert.reward_daily_rate) || 0;
           const dEarned = Number(expert.reward_earnings_today) || 0;
-          const hasReward = isLP && (expert.reward_scoring || dRate > 0 || dEarned > 0);
-          if (!hasReward) return null;
+          const totalEarned = rewardTotals ? Number(rewardTotals.total_earnings) : 0;
+          const avgDaily = rewardTotals ? Number(rewardTotals.avg_daily_earnings) : 0;
+          const daysActive = rewardTotals ? Number(rewardTotals.days_earning) : 0;
           return (
             <div className="mt-4 p-3 rounded-lg bg-amber-500/5 border border-amber-500/15">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-3">
                 <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded border ${
                   expert.reward_scoring
                     ? "bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse"
                     : "bg-pn-elevated text-pn-text-muted border-pn-border"
                 }`}>
-                  {expert.reward_scoring ? "EARNING REWARDS" : "ON REWARD MARKET"}
+                  {expert.reward_scoring ? "EARNING REWARDS" : "LP AGENT"}
                 </span>
                 {expert.reward_scoring && dRate > 0 && (
-                  <span className="text-xs text-amber-400 font-semibold">~${dRate.toFixed(2)}/day</span>
+                  <span className="text-xs text-amber-400 font-semibold">~${dRate.toFixed(2)}/day pool</span>
                 )}
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
-                {expert.reward_market_title && (
-                  <div className="col-span-2 md:col-span-3">
-                    <span className="text-pn-text-muted">Market: </span>
-                    <span className="text-[#E6E4E0]">{expert.reward_market_title}</span>
-                  </div>
-                )}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
                 <div>
-                  <span className="text-pn-text-muted">Pool Rate: </span>
-                  <span className="text-amber-400 font-semibold">{dRate > 0 ? `$${dRate.toFixed(2)}/day` : "—"}</span>
-                </div>
-                <div>
-                  <span className="text-pn-text-muted">Earned: </span>
-                  <span className="text-green-400 font-semibold">{dEarned > 0 ? `$${dEarned.toFixed(2)}` : "—"}</span>
-                </div>
-                <div>
-                  <span className="text-pn-text-muted">Status: </span>
-                  <span className={expert.reward_scoring ? "text-green-400 font-semibold" : "text-pn-text-muted"}>
-                    {expert.reward_scoring ? "Scoring" : "Not Scoring"}
+                  <span className="text-pn-text-muted block">Total Earned</span>
+                  <span className="text-green-400 font-bold text-sm">
+                    {totalEarned > 0 ? `$${totalEarned.toFixed(4)}` : "—"}
                   </span>
                 </div>
+                <div>
+                  <span className="text-pn-text-muted block">Today</span>
+                  <span className="text-amber-400 font-semibold">
+                    {dEarned > 0 ? `$${dEarned.toFixed(4)}` : "—"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-pn-text-muted block">Avg/Day</span>
+                  <span className="text-[#E6E4E0] font-semibold">
+                    {avgDaily > 0 ? `$${avgDaily.toFixed(4)}` : "—"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-pn-text-muted block">Days Active</span>
+                  <span className="text-[#E6E4E0] font-semibold">{daysActive || "—"}</span>
+                </div>
               </div>
+              {expert.reward_market_title && (
+                <div className="mt-2 text-[10px] text-pn-text-muted">
+                  Market: <span className="text-[#E6E4E0]">{expert.reward_market_title}</span>
+                </div>
+              )}
             </div>
           );
         })()}
@@ -221,6 +267,9 @@ export default function ExpertDetail() {
 
       {tab === "positions" && <PositionTable expertId={expert.id} />}
       {tab === "trades" && <TradeHistory expertId={expert.id} />}
+      {tab === "rewards" && isLP && (
+        <RewardsTab rewardDays={rewardDays} rewardTotals={rewardTotals} />
+      )}
       {tab === "research" && !isRegistered && <ResearchFeed expertId={expert.id} />}
     </div>
   );
@@ -231,6 +280,109 @@ function MiniStat({ label, value, color }: { label: string; value: string; color
     <div>
       <div className="text-xs text-pn-text-muted">{label}</div>
       <div className={`text-lg font-semibold ${color || "text-[#E6E4E0]"}`}>{value}</div>
+    </div>
+  );
+}
+
+function RewardsTab({
+  rewardDays,
+  rewardTotals,
+}: {
+  rewardDays: RewardDay[];
+  rewardTotals: RewardTotals | null;
+}) {
+  if (!rewardDays.length && !rewardTotals) {
+    return (
+      <div className="pn-card p-6 text-center text-pn-text-muted">
+        No reward earnings data yet. Earnings are synced every ~20 minutes.
+      </div>
+    );
+  }
+
+  // Sort days ascending for chart
+  const sortedDays = [...rewardDays].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+
+  return (
+    <div className="space-y-4">
+      {/* Daily Earnings Bar Chart */}
+      {sortedDays.length > 0 && (
+        <div className="pn-card p-4">
+          <h3 className="text-sm text-pn-text-muted mb-3">Daily Reward Earnings</h3>
+          <EarningsChart days={sortedDays} />
+        </div>
+      )}
+
+      {/* Per-day breakdown */}
+      {rewardDays.map((day) => (
+        <div key={day.date} className="pn-card p-4">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-semibold text-[#E6E4E0]">
+              {new Date(day.date + "T00:00:00").toLocaleDateString("en-US", {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+              })}
+            </span>
+            <span className="text-sm font-bold text-green-400">
+              ${Number(day.total_earnings).toFixed(4)}
+            </span>
+          </div>
+          {day.markets && day.markets.length > 0 && (
+            <div className="space-y-1">
+              {day.markets.map((m, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between text-xs py-1 border-t border-pn-border/30"
+                >
+                  <span className="text-pn-text-muted truncate max-w-[70%]">
+                    {m.question || m.conditionId.slice(0, 12) + "..."}
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-green-400">${Number(m.earnings).toFixed(4)}</span>
+                    {Number(m.competitiveness) > 0 && (
+                      <span className="text-pn-text-muted/60">
+                        comp: {Number(m.competitiveness).toFixed(1)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function EarningsChart({ days }: { days: RewardDay[] }) {
+  if (days.length < 1) return null;
+  const values = days.map((d) => Number(d.total_earnings));
+  const max = Math.max(...values, 0.0001);
+  const barWidth = Math.max(8, Math.min(40, 560 / days.length - 2));
+
+  return (
+    <div className="flex items-end gap-[2px] h-20 overflow-hidden">
+      {days.map((d, i) => {
+        const val = Number(d.total_earnings);
+        const pct = (val / max) * 100;
+        return (
+          <div key={i} className="flex flex-col items-center flex-1 min-w-0">
+            <div
+              className="w-full rounded-t bg-green-400/60 hover:bg-green-400 transition min-h-[2px]"
+              style={{ height: `${Math.max(pct, 2)}%`, maxWidth: `${barWidth}px` }}
+              title={`${d.date}: $${val.toFixed(4)}`}
+            />
+            {days.length <= 14 && (
+              <span className="text-[8px] text-pn-text-muted/50 mt-1">
+                {new Date(d.date + "T00:00:00").getDate()}
+              </span>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

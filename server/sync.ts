@@ -11,6 +11,8 @@ const POLYGON_RPC =
   process.env.POLYGON_RPC_URL || "https://polygon-rpc.com";
 const DATA_API = "https://data-api.polymarket.com";
 const CLOB_API = "https://clob.polymarket.com";
+const MCP_URL =
+  process.env.MCP_URL || "https://quantish-sdk-production.up.railway.app";
 
 // Claudiabot DB for reading automation_logs
 const CLAUDIABOT_DB_URL = process.env.CLAUDIABOT_DATABASE_URL;
@@ -218,6 +220,166 @@ async function syncRewardMarkets() {
   }
 }
 
+// --- Reward earnings via MCP ---
+
+interface ExpertCredentials {
+  id: string;
+  apiKey: string;
+}
+
+let credentialsMap: Map<string, ExpertCredentials> | null = null;
+
+function loadCredentials(): Map<string, ExpertCredentials> {
+  if (credentialsMap) return credentialsMap;
+  credentialsMap = new Map();
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const candidates = [
+    path.resolve(__dirname, "../config/experts-state.json"),
+    path.resolve(__dirname, "../../config/experts-state.json"),
+    path.resolve(process.cwd(), "config/experts-state.json"),
+  ];
+  for (const p of candidates) {
+    try {
+      const data = readFileSync(p, "utf-8");
+      const state: Array<{ id: string; apiKey: string; status: string }> =
+        JSON.parse(data);
+      for (const entry of state) {
+        if (entry.status === "complete" && entry.apiKey) {
+          credentialsMap.set(entry.id, { id: entry.id, apiKey: entry.apiKey });
+        }
+      }
+      break;
+    } catch {}
+  }
+  return credentialsMap;
+}
+
+async function mcpCall(
+  tool: string,
+  args: Record<string, unknown>,
+  apiKey: string
+): Promise<any> {
+  const res = await fetch(`${MCP_URL}/mcp`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "x-api-key": apiKey,
+    },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: `ea-${Date.now()}`,
+      method: "tools/call",
+      params: { name: tool, arguments: args },
+    }),
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(`MCP error: ${JSON.stringify(data.error)}`);
+  const text = data.result?.content?.[0]?.text;
+  if (!text) throw new Error("No content in MCP response");
+  return JSON.parse(text);
+}
+
+async function syncRewardEarnings() {
+  const credentials = loadCredentials();
+  const experts = await pool.query(
+    "SELECT id FROM experts WHERE wallet_address IS NOT NULL AND category LIKE 'LP-%'"
+  );
+
+  const today = new Date().toISOString().split("T")[0];
+  const yesterday = new Date(Date.now() - 86_400_000).toISOString().split("T")[0];
+
+  for (const expert of experts.rows) {
+    const creds = credentials.get(expert.id);
+    if (!creds) {
+      console.log(`[sync] No credentials for ${expert.id}, skipping earnings`);
+      continue;
+    }
+
+    // Fetch today's earnings
+    try {
+      const result = await mcpCall(
+        "get_reward_earnings",
+        { date: today, detailed: true },
+        creds.apiKey
+      );
+
+      // Update scalar on experts table for backward compat
+      await pool.query(
+        "UPDATE experts SET reward_earnings_today = $1, updated_at = NOW() WHERE id = $2",
+        [result.totalEarnings || 0, expert.id]
+      );
+
+      // Upsert per-market earnings
+      if (result.markets && Array.isArray(result.markets)) {
+        for (const market of result.markets) {
+          await pool.query(
+            `INSERT INTO reward_earnings (expert_id, date, condition_id, question, earnings, earning_percentage, competitiveness)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
+             ON CONFLICT (expert_id, date, condition_id) DO UPDATE SET
+               question = EXCLUDED.question,
+               earnings = EXCLUDED.earnings,
+               earning_percentage = EXCLUDED.earning_percentage,
+               competitiveness = EXCLUDED.competitiveness`,
+            [
+              expert.id,
+              today,
+              market.conditionId,
+              market.question || "",
+              market.earnings || 0,
+              market.earningPercentage || 0,
+              market.competitiveness || 0,
+            ]
+          );
+        }
+      }
+      console.log(
+        `[sync] Reward earnings for ${expert.id}: $${(result.totalEarnings || 0).toFixed(2)}`
+      );
+    } catch (err) {
+      console.error(`[sync] Reward earnings error for ${expert.id}:`, err);
+    }
+
+    // Backfill yesterday if missing
+    try {
+      const existing = await pool.query(
+        "SELECT 1 FROM reward_earnings WHERE expert_id = $1 AND date = $2 LIMIT 1",
+        [expert.id, yesterday]
+      );
+      if (existing.rows.length === 0) {
+        const result = await mcpCall(
+          "get_reward_earnings",
+          { date: yesterday, detailed: true },
+          creds.apiKey
+        );
+        if (result.markets && Array.isArray(result.markets)) {
+          for (const market of result.markets) {
+            await pool.query(
+              `INSERT INTO reward_earnings (expert_id, date, condition_id, question, earnings, earning_percentage, competitiveness)
+               VALUES ($1, $2, $3, $4, $5, $6, $7)
+               ON CONFLICT (expert_id, date, condition_id) DO NOTHING`,
+              [
+                expert.id,
+                yesterday,
+                market.conditionId,
+                market.question || "",
+                market.earnings || 0,
+                market.earningPercentage || 0,
+                market.competitiveness || 0,
+              ]
+            );
+          }
+        }
+      }
+    } catch {
+      // Non-fatal: yesterday's data is nice-to-have
+    }
+
+    // Small delay between agents to avoid rate limiting
+    await new Promise((r) => setTimeout(r, 500));
+  }
+}
+
 async function syncTrades() {
   const experts = await pool.query(
     "SELECT id, wallet_address FROM experts WHERE wallet_address IS NOT NULL"
@@ -417,23 +579,14 @@ async function syncResearchLogs() {
         ]
       );
 
-      // Update reward fields on expert if this is an LP report with reward data
-      if (parsed.rewardScoring !== undefined || parsed.rewardDailyRate !== undefined) {
+      // Update only reward_scoring from reports — earnings come from syncRewardEarnings() via CLOB API
+      if (parsed.rewardScoring !== undefined) {
         await pool.query(
           `UPDATE experts SET
             reward_scoring = COALESCE($1, reward_scoring),
-            reward_earnings_today = COALESCE($2, reward_earnings_today),
-            reward_daily_rate = COALESCE($3, reward_daily_rate),
-            reward_market_title = CASE WHEN $4 IS NOT NULL AND $4 != '' THEN $4 ELSE reward_market_title END,
             updated_at = NOW()
-          WHERE id = $5`,
-          [
-            parsed.rewardScoring ?? null,
-            parsed.rewardEarningsToday ?? null,
-            parsed.rewardDailyRate ?? null,
-            parsed.rewardMarketTitle ?? null,
-            expertId,
-          ]
+          WHERE id = $2`,
+          [parsed.rewardScoring ?? null, expertId]
         );
       }
     }
@@ -442,14 +595,21 @@ async function syncResearchLogs() {
   }
 }
 
+let syncCounter = 0;
+
 export async function runSync() {
-  console.log("[sync] Starting sync cycle...");
+  syncCounter++;
+  console.log(`[sync] Starting sync cycle #${syncCounter}...`);
   const start = Date.now();
 
   try {
     await syncBalances();
     await syncPositions();
     await syncRewardMarkets();
+    // Earnings sync every 4th cycle (~20 min) to avoid CLOB API rate limits
+    if (syncCounter % 4 === 0 || syncCounter === 1) {
+      await syncRewardEarnings();
+    }
     await syncTrades();
     await syncResearchLogs();
     await takeSnapshots();

@@ -16,6 +16,7 @@ interface Expert {
   reward_daily_rate?: number;
   reward_earnings_today?: number;
   reward_market_title?: string;
+  reward_total_earnings?: number;
 }
 
 export default function ExpertCard({ expert, rank }: { expert: Expert; rank: number }) {
@@ -26,7 +27,8 @@ export default function ExpertCard({ expert, rank }: { expert: Expert; rank: num
   const isLP = expert.category.startsWith("LP-");
   const dailyRate = Number(expert.reward_daily_rate) || 0;
   const earningsToday = Number(expert.reward_earnings_today) || 0;
-  const hasRewardData = isLP && (expert.reward_scoring || dailyRate > 0 || earningsToday > 0);
+  const totalEarnings = Number(expert.reward_total_earnings) || 0;
+  const hasRewardData = isLP && (expert.reward_scoring || dailyRate > 0 || earningsToday > 0 || totalEarnings > 0);
 
   return (
     <div className="pn-card p-4 hover:border-pn-text-muted/40 transition cursor-pointer group">
@@ -72,9 +74,14 @@ export default function ExpertCard({ expert, rank }: { expert: Expert; rank: num
                 ~${dailyRate.toFixed(2)}/day pool
               </span>
             )}
-            {earningsToday > 0 && (
+            {totalEarnings > 0 && (
               <span className="text-[10px] text-green-400">
-                +${earningsToday.toFixed(2)} earned
+                ${totalEarnings.toFixed(4)} total
+              </span>
+            )}
+            {earningsToday > 0 && (
+              <span className="text-[10px] text-green-400/70">
+                +${earningsToday.toFixed(4)} today
               </span>
             )}
           </div>

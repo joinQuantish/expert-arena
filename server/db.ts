@@ -109,5 +109,24 @@ export async function initDb() {
     CREATE INDEX IF NOT EXISTS idx_experts_external_id ON experts(external_id) WHERE external_id IS NOT NULL;
   `);
 
+  // Migration: reward_earnings history table
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS reward_earnings (
+      id SERIAL PRIMARY KEY,
+      expert_id TEXT REFERENCES experts(id),
+      date DATE NOT NULL,
+      condition_id TEXT NOT NULL,
+      question TEXT DEFAULT '',
+      earnings NUMERIC DEFAULT 0,
+      earning_percentage NUMERIC DEFAULT 0,
+      competitiveness NUMERIC DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(expert_id, date, condition_id)
+    );
+    CREATE INDEX IF NOT EXISTS idx_reward_earnings_expert ON reward_earnings(expert_id);
+    CREATE INDEX IF NOT EXISTS idx_reward_earnings_date ON reward_earnings(date DESC);
+    CREATE INDEX IF NOT EXISTS idx_reward_earnings_expert_date ON reward_earnings(expert_id, date DESC);
+  `);
+
   console.log("[db] Schema initialized");
 }

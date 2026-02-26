@@ -152,16 +152,16 @@ router.get("/api/experts/:id/reward-earnings", async (req, res) => {
     const days = Math.min(parseInt(req.query.days as string) || 30, 90);
     const result = await pool.query(
       `SELECT date, SUM(earnings) as total_earnings,
-              json_agg(json_build_object(
-                'conditionId', condition_id,
-                'question', question,
-                'earnings', earnings,
-                'earningPercentage', earning_percentage,
-                'competitiveness', competitiveness
-              ) ORDER BY earnings DESC) as markets
-       FROM reward_earnings
+              (SELECT json_agg(sub ORDER BY sub.earnings DESC) FROM (
+                SELECT condition_id as "conditionId", question, earnings,
+                       earning_percentage as "earningPercentage",
+                       competitiveness
+                FROM reward_earnings re2
+                WHERE re2.expert_id = re.expert_id AND re2.date = re.date AND re2.earnings > 0
+              ) sub) as markets
+       FROM reward_earnings re
        WHERE expert_id = $1 AND date >= CURRENT_DATE - INTERVAL '1 day' * $2
-       GROUP BY date
+       GROUP BY expert_id, date
        ORDER BY date DESC`,
       [req.params.id, days]
     );

@@ -329,9 +329,9 @@ function RewardsTab({
               ${Number(day.total_earnings).toFixed(4)}
             </span>
           </div>
-          {day.markets && day.markets.length > 0 && (
+          {day.markets && day.markets.filter((m) => Number(m.earnings) > 0).length > 0 && (
             <div className="space-y-1">
-              {day.markets.map((m, i) => (
+              {day.markets.filter((m) => Number(m.earnings) > 0).map((m, i) => (
                 <div
                   key={i}
                   className="flex items-center justify-between text-xs py-1 border-t border-pn-border/30"

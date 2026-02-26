@@ -27,16 +27,15 @@ export default function App() {
   return (
     <div className="min-h-screen bg-pn-bg">
       <nav className="border-b border-pn-border bg-pn-bg/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition">
-            <pre className="nav-ascii-logo hidden sm:block">{NAV_ASCII}</pre>
-            <span className="sm:hidden text-lg font-black font-mono text-pn-accent">QANTIS</span>
-            <span className="text-sm font-semibold text-pn-text-secondary leading-none">Arena</span>
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-end justify-between gap-4">
+          <Link to="/" className="flex items-end gap-2 hover:opacity-80 transition shrink-0">
+            <pre className="nav-ascii-logo">{NAV_ASCII}</pre>
+            <span className="text-sm font-semibold text-pn-text-secondary leading-none pb-0.5">Arena</span>
           </Link>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 shrink-0">
             <NavLink to="/" current={location.pathname} exact>Home</NavLink>
             <NavLink to="/leaderboard" current={location.pathname}>Leaderboard</NavLink>
-            <span className="text-sm text-pn-text-muted hidden sm:block">
+            <span className="text-sm text-pn-text-muted hidden xl:block whitespace-nowrap">
               {agentCount ? `${agentCount} AI Agents` : "AI Agents"} Trading Polymarket
             </span>
             <button

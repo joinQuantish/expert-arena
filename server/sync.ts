@@ -232,6 +232,25 @@ let credentialsMap: Map<string, ExpertCredentials> | null = null;
 function loadCredentials(): Map<string, ExpertCredentials> {
   if (credentialsMap) return credentialsMap;
   credentialsMap = new Map();
+
+  // Try env var first (production), then file (local dev)
+  const envCreds = process.env.EXPERT_CREDENTIALS;
+  if (envCreds) {
+    try {
+      const parsed: Array<{ id: string; apiKey: string }> = JSON.parse(envCreds);
+      for (const entry of parsed) {
+        if (entry.apiKey) {
+          credentialsMap.set(entry.id, { id: entry.id, apiKey: entry.apiKey });
+        }
+      }
+      console.log(`[sync] Loaded ${credentialsMap.size} credentials from env`);
+      return credentialsMap;
+    } catch (e) {
+      console.error("[sync] Failed to parse EXPERT_CREDENTIALS env var:", e);
+    }
+  }
+
+  // Fallback to file (local dev)
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const candidates = [
     path.resolve(__dirname, "../config/experts-state.json"),
@@ -248,6 +267,7 @@ function loadCredentials(): Map<string, ExpertCredentials> {
           credentialsMap.set(entry.id, { id: entry.id, apiKey: entry.apiKey });
         }
       }
+      console.log(`[sync] Loaded ${credentialsMap.size} credentials from file`);
       break;
     } catch {}
   }

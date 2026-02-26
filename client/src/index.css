@@ -68,18 +68,18 @@ body {
    Font sizes match docs exactly so the block characters render identically. */
 .nav-ascii-logo {
   font-family: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, monospace;
-  font-size: 0.28rem;
+  font-size: 0.36rem;
   line-height: 1.1;
   color: var(--pn-accent);
   letter-spacing: 0.02em;
-  overflow-x: auto;
+  overflow: hidden;
   white-space: pre;
-  -webkit-overflow-scrolling: touch;
   margin: 0;
+  max-width: 100%;
 }
 
 @media (min-width: 480px) {
-  .nav-ascii-logo { font-size: 0.5rem; }
+  .nav-ascii-logo { font-size: 0.45rem; }
 }
 @media (min-width: 640px) {
   .nav-ascii-logo { font-size: 0.55rem; }

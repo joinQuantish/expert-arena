@@ -319,7 +319,7 @@ function RewardsTab({
         <div key={day.date} className="pn-card p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-semibold text-[#E6E4E0]">
-              {new Date(day.date + "T00:00:00").toLocaleDateString("en-US", {
+              {new Date(day.date).toLocaleDateString("en-US", {
                 weekday: "short",
                 month: "short",
                 day: "numeric",
@@ -377,7 +377,7 @@ function EarningsChart({ days }: { days: RewardDay[] }) {
             />
             {days.length <= 14 && (
               <span className="text-[8px] text-pn-text-muted/50 mt-1">
-                {new Date(d.date + "T00:00:00").getDate()}
+                {new Date(d.date).getDate()}
               </span>
             )}
           </div>
